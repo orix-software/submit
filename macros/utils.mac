@@ -1,0 +1,14 @@
+.ifndef _UTILS_MAC_
+	;---------------------------------------------------------------------------
+	;
+	;---------------------------------------------------------------------------
+	.macro string80 arg
+		; Place la chaine avec le bit7 du dernier caratère à 1
+		.repeat .strlen(arg)-1, I
+		        .byte .strat(arg,I)
+		.endrepeat
+		.byte .strat(arg,.strlen(arg)-1) ^ $80
+	.endmacro
+
+	_UTILS_MAC_ = 1
+.endif
