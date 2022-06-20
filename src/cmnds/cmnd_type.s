@@ -1,36 +1,44 @@
+;----------------------------------------------------------------------
+;			includes cc65
+;----------------------------------------------------------------------
 .feature string_escapes
 
-;----------------------------------------------------------------------
-;                       cc65 includes
-;----------------------------------------------------------------------
 .include "telestrat.inc"
-.include "fcntl.inc"
+.include "errno.inc"
 
 ;----------------------------------------------------------------------
-;			Orix Kernel includes
+;			includes SDK
 ;----------------------------------------------------------------------
-.include "kernel/src/include/kernel.inc"
+.include "SDK.mac"
 
 ;----------------------------------------------------------------------
-;			Orix SDK includes
+;			include application
 ;----------------------------------------------------------------------
-.include "ch376.inc"
+;.include "macros/utils.mac"
+;.include "macros/SDK-ext.mac"
 
 ;----------------------------------------------------------------------
-;				Imports
+;				imports
 ;----------------------------------------------------------------------
-.import fpos
+.import submit_line
+.import exec_address
+
+.import skip_spaces
 
 ;----------------------------------------------------------------------
-;				Exports
+;				exports
 ;----------------------------------------------------------------------
-.export fseek
+.export cmnd_type
 
 ;----------------------------------------------------------------------
-;			fseek (en attendant XFSEEK 32 bits)
+;			Programme principal
+;----------------------------------------------------------------------
+.segment "CODE"
+
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
+;	X: offset sur le premier caractère suivant la commande
 ;
 ; Sortie:
 ;
@@ -42,63 +50,45 @@
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
-.proc fseek
-		lda	#CH376_BYTE_LOCATE
-		sta	CH376_COMMAND
+.proc cmnd_type
+		; Alias pour cat
+		jsr	skip_spaces
+		beq	end
 
-		lda	fpos
-		sta	CH376_DATA
+		; Ici X=offset vers le premier caractère du paramètre
+		sta	exec_address
 
-		lda	fpos+1
-		sta	CH376_DATA
-
-		lda	fpos+2
-		sta	CH376_DATA
-
-		lda	fpos+3
-		sta	CH376_DATA
-
-		jsr	WaitResponse
-		cmp	#CH376_USB_INT_SUCCESS
-
-		rts
-.endproc
-
-;----------------------------------------------------------------------
-;
-; Entrée:
-;
-; Sortie:
-;
-; Variables:
-;	Modifiées:
-;		-
-;	Utilisées:
-;		-
-; Sous-routines:
-;	-
-;----------------------------------------------------------------------
-.proc WaitResponse
-		ldy     #$ff
-
-	loop1:
-		ldx     #$ff
-	loop2:
-		lda     CH376_COMMAND
-		bmi     loop
-
-		lda     #$22
-		sta     CH376_COMMAND
-		lda     CH376_DATA
-		rts
-
-	loop:
+		; Remplace 'type' par 'cat '
 		dex
-		bne     loop2
+		lda	#' '
+		sta	submit_line,x
+		dex
+		lda	#'t'
+		sta	submit_line,x
+		dex
+		lda	#'a'
+		sta	submit_line,x
+		dex
+		lda	#'c'
+		sta	submit_line,x
 
+		sec
+		lda	exec_address
+		sbc	#$04
+		bcs	cat
 		dey
-		bne     loop1
 
+	cat:
+		; Indique qu'il n'y a pas de commandde interne TYPE
+		; jmp	external_command
+		sec
+		lda	#ENOENT
+		rts
+
+	end:
+		; Erreur pas de paramètre
+		lda	#EINVAL
+		sec
 		rts
 .endproc
 

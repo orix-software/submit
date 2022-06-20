@@ -19,7 +19,12 @@ XGETARGV = $2E
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-.include "macros/SDK-ext.mac"
+.ifndef SDK_VERSION
+	.include "macros/SDK-ext.mac"
+.else
+	.out "\tYou can remove macros/SDK-ext.mac from your project"
+	.out "\tYou can remove include/ch376.inc from your project"
+.endif
 
 ;----------------------------------------------------------------------
 ;				imports
@@ -30,6 +35,9 @@ XGETARGV = $2E
 .import linenum
 
 .import label_ofs, label_num, forward_label
+
+; Pointeur de pile CALL/RETURN
+.import stack_ptr
 
 ; Pour compatibilité fichier TEXT
 .import fpos_text
@@ -148,6 +156,9 @@ LINE_MAX_SIZE = 128
 		lda	#$00
 		sta	linenum
 		sta	linenum+1
+
+		; Initialise stack_ptr = 0
+		sta	stack_ptr
 
 		; Initialise errorlevel = 0
 		sta	errorlevel
@@ -274,6 +285,7 @@ LINE_MAX_SIZE = 128
 
 	end:
 		fclose	(fp)
+		; TODO: vérifier que la pile des CALLS est bien vide
 ;		print	ret_msg
 		; mfree	(_argv)
 		rts

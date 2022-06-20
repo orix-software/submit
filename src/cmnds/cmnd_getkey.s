@@ -1,57 +1,72 @@
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
+.feature string_escapes
+
 .include "telestrat.inc"
 
 ;----------------------------------------------------------------------
 ;			includes SDK
 ;----------------------------------------------------------------------
-.include "ch376.inc"
+.include "SDK.mac"
+
+;----------------------------------------------------------------------
+;			include application
+;----------------------------------------------------------------------
+;.include "macros/utils.mac"
+;.include "macros/SDK-ext.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import fpos
+.import error_level
+
+.import skip_spaces
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export ftell
+.export cmnd_getkey
+
+;----------------------------------------------------------------------
+;			Programme principal
+;----------------------------------------------------------------------
+.segment "CODE"
 
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
+;	X: offset sur le premier caractère suivant la commande
 ;
 ; Sortie:
-;	A : Modifié
 ;
 ; Variables:
 ;	Modifiées:
-;		fsize: Tailledu fichier
+;		-
 ;	Utilisées:
 ;		-
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
-.proc ftell
-		lda	#CH376_READ_VAR32
-		sta	CH376_COMMAND
+.proc cmnd_getkey
+		; Vide le buffer clavier
+                ldx     #$00
+                .byte	$00, XVIDBU
+		asl	KBDCTC
 
-		lda	#CH376_VAR_CURRENT_OFFSET
-		sta	CH376_DATA
+		; Initialise errorlevel
+		lda	#$00
+		sta	errorlevel
+		sta	errorlevel+1
 
-		lda	CH376_DATA
-		sta	fpos
+		cgetc
+		asl	KBDCTC
+		bcs	break
 
-		lda	CH376_DATA
-		sta	fpos+1
+		sta	errorlevel
 
-		lda	CH376_DATA
-		sta	fpos+2
-
-		lda	CH376_DATA
-		sta	fpos+3
-
+	break:
+		clc
 		rts
 .endproc
 

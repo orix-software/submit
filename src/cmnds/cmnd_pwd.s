@@ -1,57 +1,44 @@
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
+.feature string_escapes
+
 .include "telestrat.inc"
 
 ;----------------------------------------------------------------------
 ;			includes SDK
 ;----------------------------------------------------------------------
-.include "ch376.inc"
-
-;----------------------------------------------------------------------
-;				imports
-;----------------------------------------------------------------------
-.import fpos
+.include "SDK.mac"
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export ftell
+.export cmnd_pwd
+
+;----------------------------------------------------------------------
+;			Programme principal
+;----------------------------------------------------------------------
+.segment "CODE"
 
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
+;	X: offset sur le premier caractère suivant la commande
 ;
 ; Sortie:
-;	A : Modifié
 ;
 ; Variables:
 ;	Modifiées:
-;		fsize: Tailledu fichier
+;		-
 ;	Utilisées:
 ;		-
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
-.proc ftell
-		lda	#CH376_READ_VAR32
-		sta	CH376_COMMAND
-
-		lda	#CH376_VAR_CURRENT_OFFSET
-		sta	CH376_DATA
-
-		lda	CH376_DATA
-		sta	fpos
-
-		lda	CH376_DATA
-		sta	fpos+1
-
-		lda	CH376_DATA
-		sta	fpos+2
-
-		lda	CH376_DATA
-		sta	fpos+3
-
+.proc cmnd_pwd
+		print	path
+		clc
 		rts
 .endproc
+
 

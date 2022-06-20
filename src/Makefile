@@ -44,11 +44,11 @@ endif
 #
 
 ifeq ($(DEBUG),yes)
-	ASFLAGS = -t $(TARGET) -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import --list-bytes 0 -l $(@:.o=.lst) --debug-info
+	ASFLAGS = -t $(TARGET) -I ./include -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import --list-bytes 0 -l $(@:.o=.lst) --debug-info
 	LDFLAGS = -t $(TARGET)  -Ln $(@).ca.sym -m $(@).map --lib-path $(LIB_PATH)
 	# LDFLAGS = -C "$(LD65_CFG)"  -Ln $(BUILD_PATH)/$(PROJECT).ca.sym -m $(BUILD_PATH)/$(PROJECT).map --lib-path $(LIB_PATH)
 else
-	ASFLAGS = -t $(TARGET) -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import
+	ASFLAGS = -t $(TARGET) -I ./include -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import
 	LDFLAGS = -t $(TARGET)  --lib-path $(LIB_PATH)
 	# LDFLAGS = -C "$(LD65_CFG)"  --lib-path $(LIB_PATH)
 endif
@@ -83,7 +83,7 @@ mrproper: clean
 #
 
 
-SRC = $(wildcard *.s)
+SRC = $(wildcard *.s) $(wildcard cmnds/*.s)
 OBJS= $(addprefix $(OBJ_PATH)/, $(patsubst %.s,%.o, $(SRC)))
 DEPS := $(OBJS:.o=.d)
 
@@ -103,7 +103,7 @@ endif
 
 $(OBJ_PATH):
 	@echo "Create $(OBJ_PATH) directory"
-	@mkdir -p $(OBJ_PATH)
+	@mkdir -p $(OBJ_PATH) $(OBJ_PATH)/cmnds
 
 $(BIN_PATH):
 	@echo "Create $(BIN_PATH) directory"
