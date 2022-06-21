@@ -1,19 +1,19 @@
-# Command: hello
+# Command: submit
 
-### hello utility
+### submit utility
 
 ## SYNOPSYS
-+ hello <arg>
++ submit file [arg...]
 
 ## EXAMPLES
-+ hello oric
++ submit help.sub
 
 ## DESCRIPTION
-**hello** display a simple hello message
+**submit** is a command language interpreter that executes commands read from a file.
 
 ## OPTIONS
 *  no options
 
 ## SOURCE
-https://github.com/orix-software/hello
+https://github.com/orix-software/submit
 
