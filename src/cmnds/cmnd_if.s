@@ -26,7 +26,7 @@ XOPENDIR = $2f
 
 .import submit_line, line
 .import internal_var_table
-.import error_level
+.import vartab
 
 .import skip_spaces
 .import internal_command
@@ -117,6 +117,16 @@ XOPENDIR = $2f
 		jmp	internal_command
 
 	if_var:
+		; Récupère la valeur de la variable
+		; On arrive ici avec C=0
+		sbc	#$00
+		asl
+		tay
+		lda	vartab,y
+		sta	var1
+		lda	vartab+1,y
+		sta	var1+1
+
 		; if <variable> <value> <instruction>
 		; Saute les espaces
 		jsr	skip_spaces
@@ -199,10 +209,10 @@ XOPENDIR = $2f
 
 		; Il faudrait utiliser l'indice de la variable interne pour
 		; faire la comparaison
-		lda	errorlevel+1
+		lda	var1+1
 		cmp	var2+1
 		bne	test
-		lda	errorlevel
+		lda	var1
 		cmp	var2
 
 		; IF ERRORLEVEL n xxxx

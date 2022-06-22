@@ -1,0 +1,260 @@
+REM Menu.sub
+
+#if exist /demo.sub echo /demo.sub existe
+#if exist /a echo /a existe
+#if exist $1 echo $1 existe
+
+#pause
+
+REM ---------------------
+
+cls
+setfont sedfnt
+
+@ 0,0 " File ^[P Edit ^[P View ^[P Tools ^[P Help ^[P"
+@  7,3 "+-------------------------------+"
+@  8,3 "!                               !"
+@  9,3 "!                               !"
+@ 10,3 "!    ^[LChargement en cours...^[H   !"
+@ 11,3 "!                               !"
+@ 12,3 "!                               !"
+@ 13,3 "!                               !"
+@ 14,3 "+-------------------------------+"
+
+goto help
+
+REM ---------------------
+:start
+cls
+@ 0,0 " File ^[P Edit ^[P View ^[P Tools ^[P Help ^[P"
+
+REM ---------------------
+:select
+@ 26,0
+choice -cfevth -n
+@ 26,0 " "
+
+@ 0,0 " "
+@ 0,7 " "
+@ 0,14 " "
+@ 0,21 " "
+@ 0,29 " "
+
+if errorlevel 5 goto help
+if errorlevel 4 goto tools
+if errorlevel 3 goto view
+if errorlevel 2 goto edit
+if errorlevel 1 goto file
+
+:exit
+@ 27,5
+Pause
+@ 0,0 "                                  "
+cls
+exit
+
+REM ---------------------
+:file
+@ 0,0 ^[T
+
+@ 1,0
+echo " +---------+"
+echo " ! New    ^[P!"
+echo " ! Open   ^[P!"
+echo " ! Save   ^[P!"
+echo " ! Quit   ^[P!"
+echo " +---------+"
+
+@ 26,0
+choice -n -cnosq
+@ 26,0 " "
+
+@ 2,2 " "
+@ 3,2 " "
+@ 4,2 " "
+@ 5,2 " "
+
+if errorlevel 4 goto file_q
+if errorlevel 3 goto file_s
+if errorlevel 2 goto file_o
+if errorlevel 1 goto file_n
+
+# Efface le menu
+@ 1,0
+echo ^N
+echo ^N
+echo ^N
+echo ^N
+echo ^N
+echo ^N
+
+# Deselectionne le menu
+@ 0,0 " "
+
+goto select
+
+:file_n
+@ 2,2 ^[T
+goto file
+
+:file_o
+@ 3,2 ^[T
+goto file
+
+:file_s
+@ 4,2 ^[T
+goto file
+
+:file_q
+@ 5,2 ^[T
+
+@ 10,3 "+------------------------------+"
+@ 11,3 "! Voulez vous vraiment quitter !"
+@ 12,3 "!                              !"
+@ 13,3 "!        [Oui] ^[P [Non] ^[P       !"
+@ 14,3 "+------------------------------+"
+
+@ 26,0
+choice -con -n
+@ 26,0 " "
+
+if errorlevel 2 @ 13,19 ^[T
+if errorlevel 2 goto file_q_efface
+
+if errorlevel 1 @ 13,11 ^[T
+
+:file_q_efface
+@ 10,3 "                                "
+@ 11,3 "                                "
+@ 12,3 "                                "
+@ 13,3 "                                "
+@ 14,3 "                                "
+
+if errorlevel 2 goto file
+goto exit
+
+REM ---------------------
+:edit
+@ 0,7 ^[T
+
+@ 1,8 "+--------------+"
+@ 2,8 "! Undo        ^[P!"
+@ 3,8 "! Redo        ^[P!"
+@ 4,8 "! Pr{f~rences ^[P!"
+@ 5,8 "+--------------+"
+
+@ 26,0
+choice -n -curp
+@ 26,0 " "
+
+@ 2,9 " "
+@ 3,9 " "
+@ 4,9 " "
+
+if errorlevel 3 goto edit_p
+if errorlevel 2 goto edit_r
+if errorlevel 1 goto edit_u
+
+# Efface le menu
+@ 1,0 ^N
+echo ^N
+echo ^N
+echo ^N
+echo ^N
+echo ^N
+
+# Deselectionne le menu
+@ 0,7 " "
+
+goto select
+
+:edit_u
+@ 2,9 ^[T
+goto edit
+
+:edit_r
+@ 3,9 ^[T
+goto edit
+
+:edit_p
+@ 4,9 ^[T
+
+@ 5,4 "+--------------+"
+@ 6,4 "!  Choix   1  ^[P!"
+@ 7,4 "!  Choix   2  ^[P!"
+@ 8,4 "!  Choix   3  ^[P!"
+@ 9,4 "+--------------+"
+
+:edit_p_sel
+@ 23,0 .....:....1....:....2....:....3....:....
+@ 24,0 0123456789012345678901234567890123456789
+@ 26,10
+choice -c123 -n Choisissez 1,2 ou 3^[@
+@ 26,30 " "
+
+@ 6,5 " "
+@ 7,5 " "
+@ 8,5 " "
+
+if errorlevel 3 @ 8,5 ^[T
+if errorlevel 3 goto edit_p_sel
+
+if errorlevel 2 @ 7,5 ^[T
+if errorlevel 2 goto edit_p_sel
+
+if errorlevel 1 @ 6,5 ^[T
+if errorlevel 1 goto edit_p_sel
+
+cls
+goto edit
+
+REM ---------------------
+:view
+@ 0,14 ^[T
+
+@ 5,12 ^[C** lsmem **
+echo
+lsmem
+
+@ 27,5
+Pause
+
+@ 0,14 " "
+
+goto start
+
+REM ---------------------
+:tools
+@ 0,21 ^[T
+
+@ 4,6 ^[C** Liste des labels **
+@ 6,0
+dump
+
+@ 27,5
+pause
+goto start
+
+REM ---------------------
+:help
+@ 0,29 ^[T
+
+# On place le ^[P pour éviter que le bandeau bleu ne dépasse le cadre
+# lors de l'affichage de la ligne 6
+@  8,35 ^[P
+
+@  7,3 "+-------------------------------+"
+@  8,3 "! ^[T          A I D E           ^[P!"
+@  9,3 "!                               !"
+@ 10,3 "! Tapez l'initiale d'un menu ou !"
+@ 11,3 "! d'une option pour l'activer.  !"
+@ 12,3 "!                               !"
+@ 13,3 "! Ctrl+C pour sortir d'un menu  !"
+@ 14,3 "+-------------------------------+"
+
+@ 27,5
+Pause
+
+@ 0,29 " "
+
+goto start

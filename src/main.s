@@ -61,7 +61,7 @@ XGETARGV = $2E
 .export filename
 .export submit_path
 .export path
-.export errorlevel
+.export vartab, errorlevel, key
 
 ;----------------------------------------------------------------------
 ;                       Segments vides
@@ -104,6 +104,8 @@ LINE_MAX_SIZE = 128
 		unsigned char  _argc
 
 		unsigned short errorlevel
+		unsigned short key
+		vartab := errorlevel
 
 		unsigned char save_x
 
@@ -410,7 +412,7 @@ LINE_MAX_SIZE = 128
 	error_end:
 		cputc	'^'
 		crlf
-
+		; jsr	cmnd_dump
 		; Restaure DEFAFF
 		lda	defaff_save
 		sta	DEFAFF

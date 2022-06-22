@@ -1,0 +1,423 @@
+# Commandes internes shell invalides: help, pwd
+# Commandes internes shell simul{es: echo, cd
+# Commandes ajout{es: cls, choice, goto, if, pause, rem, type
+
+# ------------------------------------
+cls
+setfont sedfnt
+goto _$1
+
+# ------------------------------------
+
+# :start
+# cls
+# setfont sedfnt
+#
+# dump
+#
+# choice Continuer
+# if errorlevel 2 goto N
+# if errorlevel 1 goto Y
+# if errorlevel 0 echo Vous avez tap{ Ctrl+C
+# exit
+#
+# :N
+# echo Vous avez choisi N
+# echo
+# dump
+# pause
+# goto start
+#
+# :Y
+# echo Vous avez choisi Y
+# echo
+# dump
+# pause
+# goto start
+
+# ------------------------------------
+:_
+:start
+cls
+setfont sedfnt
+
+echo ^[T^[C    ** D{monstration de submit **
+echo
+echo
+echo
+echo Un fichier submit peut faire appel @
+echo toutes les commandes du shell @
+echo l'exception des commandes internes
+echo suivantes:
+echo
+echo "   - help"
+echo "   - pwd"
+echo
+echo qui ne sont pas encore support{es.
+echo
+echo Les commandes ^[Tcall ^[P,^[Tchoice ^[P,^[Tcls ^[P,
+echo ^[Tgetkey ^[P,^[Tgoto ^[P,^[Tif ^[P,^[Tpause ^[P,
+echo ^[Treturn ^[Pet^[Ttype ^[Pont {t{ ajout{es.
+echo
+echo La commande ^[Techo ^[Pest {tendue par
+echo rapport @ celle du shell.
+echo
+pause
+
+# ------------------------------------
+cls
+echo
+echo Une ligne ne peut exc{der^[A128^[Gcaract}resou^[A200^[Gapr}s expansion des variables.
+echo
+echo Il n'y a^[Bpas de taille maximale^[Gpour
+echo un fichier submit.
+echo
+echo
+echo
+echo Les param}tres de la ligne de commande
+echo sont accessibles par les variables^[C$$0
+echo a^[C$$9.
+echo
+echo ^[C$$0^[Gest le nom du fichier submit.
+echo
+echo
+echo Dans le cas de cette d{monstration:
+echo
+echo Fichier   : $0
+echo Param}tres: $1 $2 $3 $4 $5 $6 $7 $8 $9
+echo
+echo
+pause
+
+# ------------------------------------
+cls
+echo
+echo Les lignes commen\ant par:
+echo
+echo "     - ^[TREM ^[P"
+echo "     - ^[T# ^[P"
+echo "     - ^[T; ^[P"
+echo
+echo sont des commentaires.
+echo
+echo
+echo Les lignes commen\ant par:
+echo
+echo "     - ^[T:^[P"
+echo
+echo d{finissent un label.
+echo
+echo
+pause
+
+# ------------------------------------
+:_call
+
+cls
+echo ^[T^[C             ** call **
+echo
+echo
+echo La commande ^[Tcall ^[Ppermet de faire
+echo appell @ une sous-routine termin{e
+echo par ^[Treturn ^[P.
+echo
+echo
+echo ^[TSyntaxe:^[Pcall^[Flabel
+echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_choice
+
+cls
+echo ^[T^[C            ** choice **
+echo
+echo
+echo La commande ^[Tchoice ^[Ppermet d'afficher
+echo un message et de proposer une liste
+echo d'options.
+echo
+echo
+echo ^[TSyntaxe:^[Pchoice [-n] [-c<liste>] [msg]
+echo
+echo "   ^[B-n^[G     n'affiche pas les choix
+echo
+echo "   ^[B<liste>^[Gest une suite de caract}res"
+echo "            composant les options possi-            -bles."
+echo "            Valeur par d{faut: YN"
+echo
+echo "   ^[Bmsg^[G    est le message affich{."
+echo "            Valeur par d{faut: aucun"
+echo
+echo
+echo ^[TExemple:^[Pchoice -con Continuer
+echo
+echo
+choice -con Continuer
+echo
+pause
+
+# ------------------------------------
+:_echo
+
+cls
+echo ^[T^[C             ** echo **
+echo La commande ^[Techo ^[Paccepte les
+echo caract}res de controle.
+echo
+echo Par exemple pour la couleur:
+echo
+echo ^[@^[WNoir ^[P
+echo " ^[ARouge"
+echo " ^[BVert"
+echo " ^[CJaune"
+echo " ^[DBleu"
+echo " ^[EMagenta"
+echo " ^[FCyan"
+echo "  Blanc"
+echo
+echo "  Fond noir"
+echo ^[Q Fond rouge   ^[P
+echo ^[R^[@Fond vert    ^[P
+echo ^[S^[@Fond jaune   ^[P
+echo ^[T Fond bleu    ^[P
+echo ^[U Fond magenta ^[P
+echo ^[V^[DFond cyan    ^[P
+echo ^[W^[@Fond blanc   ^[P
+echo
+echo Les caract}res de controles sont ^^A @ ^^[
+pause
+
+# ------------------------------------
+:_getkey
+
+cls
+echo ^[T^[C           ** getkey **
+echo
+echo
+echo La commande ^[Tgetkey ^[P permet d'attendre
+echo la frappe d'une touche du clavier.
+echo
+echo Le code ASCII de la touche est plac{
+echo dans la variable^[D^[Rkey ^[P^[@.
+echo
+echo
+echo ^[TSyntaxe:^[Pgetkey
+echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_goto
+
+cls
+echo ^[T^[C             ** goto **
+echo
+echo
+echo La commande ^[Tgoto ^[Ppermet de poursuivre
+echo l'ex{cution @ un label sp{cifique.
+echo
+echo
+echo ^[TSyntaxe:^[Pgoto^[Flabel
+echo
+echo
+echo Un label est cr{{ en d{butant une ligne
+echo par^[F:^[Gsuivi d'une chaine de caract}res.
+echo
+echo
+pause
+
+# ------------------------------------
+:_if
+
+cls
+echo ^[T^[C              ** if **
+echo
+echo
+echo La commande ^[Tif ^[P permet de faire
+echo un test par rapport au code erreur de
+echo la derni}re commande ex{cut{e ou de
+echo tester l'existence d'un fichier.
+echo
+echo
+echo ^[TSyntaxe:^[P
+echo "     if^[D^[Rvar^[C^[Pn^[Finstruction"
+echo "     if exist^[Efichier^[Finstruction"
+echo "     if^[D^[Rvar^[B^[Pop^[Cn^[Finstruction"
+echo
+echo
+echo "   Si la valeur de^[D^[Rvar^[G^[Pest sup{-"
+echo -rieure ou {gale @^[Cn^[Gou si le fichier
+echo existe alors^[Finstruction^[Gsera ex{cut{e.
+echo
+echo "  ^[D^[Rvar^[G^[P peut etre errorlevel ou key"
+echo "  ^[Bop^[Gpeut etre <, =, > ou #"
+echo
+echo
+pause
+
+cls
+echo ^[T^[C              ** if **
+echo
+echo
+echo ^[TExemples:^[P
+echo "    [1] if errorlevel 2 goto choix2"
+echo "    [2] if exist fichier echo Ok"
+echo -n "    [3] if errorlevel < 2 echo inf{rieur"
+echo "    [4] if key # 65 echo diff{rent"
+echo
+echo
+echo [1] Ira au label^[Fchoix2^[Gsi errorlevel
+echo "    est sup{rieur ou {gale @^[C2^[G."
+echo
+echo [2] Affiche^[BOk^[Gsi^[Efichier^[Gexiste.
+echo
+echo [3] Affiche^[Binf{rieur^[Gsi^[D^[Rerrorlevel ^[P^[@
+echo "    est inf{rieur @^[C2^[G."
+echo
+echo [4] Affiche^[Bdiff{rent^[Gsi^[D^[Rkey ^[P^[@
+echo "    est diff{rent de^[C65^[G."
+echo
+echo
+pause
+
+# ------------------------------------
+:_pause
+
+cls
+echo ^[T^[C             ** pause **
+echo
+echo
+echo La commande ^[Tpause ^[Paffiche un message
+echo et attend l'appui sur une touche.
+echo
+echo Elle accepte un message optionnel en
+echo param}tre.
+echo
+echo
+echo ^[TSyntaxe:^[Ppause^[Bmessage
+echo
+echo
+echo Le message par d{faut est:
+echo
+echo "      ^[BPress any key to continue"
+echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_return
+
+cls
+echo ^[T^[C            ** return **
+echo
+echo
+echo La commande ^[Treturn ^[P termine une
+echo sous-routine et permet de revenir @ la
+echo ligne suivant le ^[Tcall ^[P.
+echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_type
+
+cls
+echo ^[T^[C             ** type **
+echo
+echo
+echo La commande ^[Ttype ^[Pest un alias de ^[Tcat
+echo mais renvoie une erreur si son param}treest absent.
+echo
+pause
+
+# ------------------------------------
+cls
+echo Affichage du fichier $0:
+echo
+pause
+
+# type $0
+
+echo
+pause ^[L^[FAppuyez sur une touche pour continuer
+
+# ------------------------------------
+cls
+pause ^[L^[FAffichage du r{pertoire courant
+
+ls
+
+pause
+
+# ------------------------------------
+cls
+echo ^[T^[C       ** M{moire utilis{e **
+echo
+
+lsmem
+
+echo
+pause
+
+# ------------------------------------
+cls
+echo ^[T^[C      ** Liste des banques **
+echo
+
+bank
+
+echo
+pause
+
+# ------------------------------------
+cls
+echo ^[T^[C     ** Configuration Oric **
+echo
+
+lscpu
+
+echo
+echo "             ^[B----------"
+
+ioports
+
+echo
+echo "             ^[B----------"
+
+mount
+
+echo
+echo "             ^[B----------"
+
+df
+
+echo
+echo
+pause "   ^[T^[C** Fin de la d{monstration **   ^[P"
+
+# ------------------------------------
+cls
+setfont default
+
+# ------------------------------------
+REM cd $1
+REM ls $1
+REM debug
+REM ps
+REM twil
+REM env
+REM uname
+REM man man
+REM setfont bolduk0
+REM viewhrs story2.hrs
+REM otimer
+REM reboot
+REM mkdir toto1
+REM touch fichier
+REM clear

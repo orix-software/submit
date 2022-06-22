@@ -132,10 +132,15 @@ typedef .struct stack_item
 
 		; Sauvegarde le numéro de la ligne suivant le call
 		; (utile uniquement pour les messages d'erreurs)
+;		sed
+;		clc
 		lda	linenum
+;		adc	#$01
 		sta	stack,y
 		lda	linenum+1
+;		adc	#$00
 		sta	stack+1,y
+;		cld
 
 		; Sauvegarde l'offset de la ligne suivant le call
 		lda	fpos_text
@@ -198,12 +203,16 @@ typedef .struct stack_item
 		; Restaure l'offset de la ligne
 		lda	stack+2,y
 		sta	fpos
+		sta	fpos_text
 		lda	stack+3,y
 		sta	fpos+1
+		sta	fpos_text+1
 		lda	stack+4,y
 		sta	fpos+2
+		sta	fpos_text+2
 		lda	stack+5,y
 		sta	fpos+3
+		sta	fpos_text+3
 
 		jsr	buffer_reset
 

@@ -483,6 +483,8 @@ LINE_MAX_SIZE = 128
 			string80	"CALL"
 			string80	"RETURN"
 
+			string80	"TEXT"
+
 			string80	"DUMP"
 			string80	"ERRORLEVEL"
 			.byte	$00
@@ -510,11 +512,14 @@ LINE_MAX_SIZE = 128
 			.word	cmnd_call
 			.word	cmnd_return
 
+			.word	cmnd_text
+
 			.word	cmnd_dump
 			.word	cmnd_errorlevel
 
 		internal_var_table:
 			string80	"EXIST"
 			string80	"ERRORLEVEL"
+			string80	"KEY"
 			.byte	$00
 .popseg

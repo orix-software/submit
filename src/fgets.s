@@ -99,7 +99,7 @@ TEXTFILE = 1
 			stx	max_line_size
 
 			; Incrémeente le numéro de ligne
-			php
+			;php
 			sed
 			clc
 			lda	linenum
@@ -108,7 +108,8 @@ TEXTFILE = 1
 			lda	linenum+1
 			adc	#$00
 			sta	linenum+1
-			plp
+			cld
+			;plp
 
 		loop:
 			; fread	(address), #1, 1, fp
