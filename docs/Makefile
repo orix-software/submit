@@ -39,7 +39,7 @@ endif
 
 .PHONY: clean mrproper
 
-all: $(MAN_PATH) $(MAN_PATH)/$(PROJECT).hlp
+all: $(MAN_PATH) $(MAN_PATH)/$(PROJECT).hlp $(MAN_PATH)/subdoc.hlp
 
 configure: $(MAN_PATH)
 
@@ -57,7 +57,7 @@ mrproper: clean
 #
 
 
-SRC = $(PROJECT).md
+SRC = $(wildcard *.md)
 OBJS= $(addprefix $(MAN_PATH)/, $(patsubst %.md,%.hlp, $(SRC)))
 
 
@@ -68,6 +68,10 @@ $(MAN_PATH)/%.hlp: %.md
 
 
 $(MAN_PATH)/$(PROJECT).hlp: $(PROJECT).md
+
+$(MAN_PATH)/subdoc.hlp: subdoc.md
+	@echo "Create $@"
+	@python $(MD2HLP) $(MD2HLPFLAGS) -c subdoc.cfg -o $@ -f $<
 
 $(MAN_PATH):
 	@echo "Create $(BUILD_PATH) directory"

@@ -196,7 +196,7 @@ LINE_MAX_SIZE = 128
 		;lda	#>path
 		;sta	file_pwd+1
 
-		; initmainargs samble poser un problème avec EXEC
+		; initmainargs semble poser un problème avec EXEC
 		; c'est à priori lié au malloc fait par inimainargs
 ;		initmainargs _argv
 ;		stx	_argc

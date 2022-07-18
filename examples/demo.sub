@@ -4,7 +4,7 @@
 
 # ------------------------------------
 cls
-setfont sedfnt
+setfont oricfr0
 goto _$1
 
 # ------------------------------------
@@ -322,6 +322,39 @@ echo ligne suivant le ^[Tcall ^[P.
 echo
 echo
 echo
+pause
+
+# ------------------------------------
+:_text
+:_endtext
+
+cls
+text
+^[T^[C        ** text /endtext **
+
+
+Affiche directement tout ce qui est
+entre ^[Ttext ^[Pet^[Tendtext ^[P.
+
+Les codes de controles sont interpr{t{s
+ainsi que les param)tres.
+
+
+^[Ttext ^[Pet^[Tendtext ^[P doivent ~tre seuls
+sur la ligne.
+
+
+^[TExemple:^[P
+    text
+    Ligne de texte
+       avec des^^[Bcouleurs^^[G
+    endtext
+
+^[Taffiche:^[P
+    Ligne de texte
+       avec des^[Bcouleurs^[G
+
+endtext
 pause
 
 # ------------------------------------

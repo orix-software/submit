@@ -15,6 +15,8 @@ SDK_PATH = ../../orix-sdk/
 LIB_PATH = $(SDK_PATH)/build/lib
 LIBS = orix-sdk.lib
 
+START_ADDR ?= 0x0900
+
 VERSION ?= "0.01"
 VERBOSE ?= 0
 
@@ -45,11 +47,11 @@ endif
 
 ifeq ($(DEBUG),yes)
 	ASFLAGS = -t $(TARGET) -I ./include -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import --list-bytes 0 -l $(@:.o=.lst) --debug-info
-	LDFLAGS = -t $(TARGET)  -Ln $(@).ca.sym -m $(@).map --lib-path $(LIB_PATH)
+	LDFLAGS = -t $(TARGET)  -Ln $(@).ca.sym -m $(@).map --lib-path $(LIB_PATH) --start-addr $(START_ADDR)
 	# LDFLAGS = -C "$(LD65_CFG)"  -Ln $(BUILD_PATH)/$(PROJECT).ca.sym -m $(BUILD_PATH)/$(PROJECT).map --lib-path $(LIB_PATH)
 else
 	ASFLAGS = -t $(TARGET) -I ./include -I ../ -I $(BUILD_PATH) -I $(SDK_PATH)/macros -I $(SDK_PATH)/include -I $(SHELL_PATH) -I $(KERNEL_PATH) -D VERBOSE_LEVEL=$(VERBOSE) --auto-import
-	LDFLAGS = -t $(TARGET)  --lib-path $(LIB_PATH)
+	LDFLAGS = -t $(TARGET)  --lib-path $(LIB_PATH) --start-addr $(START_ADDR)
 	# LDFLAGS = -C "$(LD65_CFG)"  --lib-path $(LIB_PATH)
 endif
 
@@ -94,7 +96,7 @@ $(OBJ_PATH)/%.o: %.s
 
 
 $(BIN_PATH)/$(PROJECT): $(OBJS) $(LIB_PATH)/$(LIBS)
-	@echo "Create $(PROJECT)"
+	@echo "Create $(PROJECT) (start address = $(START_ADDR))"
 	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBS) $(TARGET).lib
 ifeq ($(DEBUG),yes)
 	@echo "Create $(PROJECT).sym"

@@ -9,7 +9,7 @@ REM Menu.sub
 REM ---------------------
 
 cls
-setfont sedfnt
+setfont oricfr0
 
 @ 0,0 " File ^[P Edit ^[P View ^[P Tools ^[P Help ^[P"
 @  7,3 "+-------------------------------+"
