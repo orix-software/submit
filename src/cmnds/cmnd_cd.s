@@ -27,6 +27,7 @@ XOPENDIR = $2f
 .import save_x
 .import submit_line
 .import path
+;.import path_len
 
 .import skip_spaces
 
@@ -48,11 +49,15 @@ XOPENDIR = $2f
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		exec_address
+;		save_x
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	restore_line
+;	XOPENDIR
+;	chdir
 ;----------------------------------------------------------------------
 .proc cmnd_cd
 		; TODO: ajouter le support de "cd -"
@@ -113,6 +118,21 @@ XOPENDIR = $2f
 		sec
 		rts
 
+	;----------------------------------------------------------------------
+	;
+	; Entrée:
+	;	-
+	; Sortie:
+	;	-
+	; Variables:
+	;	Modifiées:
+	;		path
+	;	Utilisées:
+	;		save_x
+	;		submit_line
+	; Sous-routines:
+	;	-
+	;----------------------------------------------------------------------
 	.proc restore_line
 			; Recherche le '/*' ajouté par XOPENDIR
 			ldx	save_x
@@ -130,7 +150,7 @@ XOPENDIR = $2f
 			lda	#$00
 			sta	path,y
 			sta	submit_line,x
-
+			; sty	path_len
 			rts
 	.endproc
 .endproc

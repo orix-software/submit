@@ -1,6 +1,6 @@
 # Commandes internes shell invalides: help, pwd
 # Commandes internes shell simul{es: echo, cd
-# Commandes ajout{es: cls, choice, goto, if, pause, rem, type
+# Commandes ajout{es: cls, chain, choice, goto, if, input, pause, rem, restore from, save to, type
 
 # ------------------------------------
 cls
@@ -55,9 +55,10 @@ echo "   - pwd"
 echo
 echo qui ne sont pas encore support{es.
 echo
-echo Les commandes ^[Tcall ^[P,^[Tchoice ^[P,^[Tcls ^[P,
-echo ^[Tgetkey ^[P,^[Tgoto ^[P,^[Tif ^[P,^[Tpause ^[P,
-echo ^[Treturn ^[Pet^[Ttype ^[Pont {t{ ajout{es.
+echo -n Les commandes ^[Tcall ^[P,^[Tchain ^[P,^[Tchoice ^[P,
+echo -n ^[Tcls ^[P,^[Tgetkey ^[P,^[Tgoto ^[P,^[Tif ^[P,^[Tpause ^[P,
+echo ^[Trestore ^[P,^[Treturn ^[P,^[Tsave ^[Pet^[Ttype ^[P
+echo ont {t{ ajout{es.
 echo
 echo La commande ^[Techo ^[Pest {tendue par
 echo rapport @ celle du shell.
@@ -123,6 +124,30 @@ echo par ^[Treturn ^[P.
 echo
 echo
 echo ^[TSyntaxe:^[Pcall^[Flabel
+echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_chain
+
+cls
+echo ^[T^[C             ** chain **
+echo
+echo
+echo La commande ^[Tchain ^[Ppermet de
+echo poursuivre l'ex{cution @ partir
+echo d'un autre script.
+echo
+echo En cas d'erreur^[D^[Rerrorlevel^[G^[Pvaut 1
+echo et le script appelant se poursuit.
+echo
+echo
+echo ^[TSyntaxe:^[Pchain^[Efilename
+echo
+echo
+echo ^[TExemple:^[Pchain script2.sub
 echo
 echo
 echo
@@ -285,6 +310,37 @@ echo
 pause
 
 # ------------------------------------
+:_input
+
+cls
+echo ^[T^[C             ** input **
+echo
+echo
+echo La commande ^[Tinput ^[Paffiche un message
+echo et attend la saisie d'une chaine de caract}res.
+echo
+echo ^[TSyntaxe:^[Pinput^[B[msg],[len],^[D^[Rvar^[G^[P
+echo
+echo "   ^[Bmsg^[G    est le message affich{."
+echo "            Valeur par d{faut: aucun"
+echo
+echo "   ^[Blen^[G    est la longueur du champ."
+echo "            Valeur par d{faut: 32"
+echo "            Valeur maximale  : 32"
+echo
+echo "  ^[D^[Rvar^[G^[P   est le nom de la variable."
+echo
+echo Apr}s ex{cution^[D^[Rerrorlevel^[G^[Pvaut:
+echo "    0: ok"
+echo "    1: saisie vide"
+echo "    2: sortie par ctrl+c"
+echo
+echo ^[TExemple:^[P
+echo ^[G    input "choix ",10,var
+echo
+pause
+
+# ------------------------------------
 :_pause
 
 cls
@@ -310,6 +366,36 @@ echo
 pause
 
 # ------------------------------------
+:_restore
+
+cls
+echo ^[T^[C         ** restore from **
+echo
+echo
+echo La commande ^[Trestore from ^[P permet
+echo de recharger des variables @ partir
+echo d'un fichier (voir ^[Tsave to^[P).
+echo
+echo Elle n{cessite le nom du fichier en
+echo param}tre.
+echo
+echo ^[TSyntaxe:^[Prestore from^[Efilename
+echo
+echo Apr}s ex{cution^[D^[Rerrorlevel^[G^[Pvaut:
+echo "    0: ok"
+echo "    1: erreur d'ouverture du fichier"
+echo "    2: '=' manquant"
+echo "    3: nom de variable trop long"
+echo "    4: trop de variables"
+echo "    5: chaine trop longue"
+echo "    6: erreur interne"
+echo
+echo ^[TExemple:^[P
+echo "    restore from variable.cfg"
+echo
+pause
+
+# ------------------------------------
 :_return
 
 cls
@@ -320,6 +406,35 @@ echo La commande ^[Treturn ^[P termine une
 echo sous-routine et permet de revenir @ la
 echo ligne suivant le ^[Tcall ^[P.
 echo
+echo
+echo
+pause
+
+# ------------------------------------
+:_save
+
+cls
+echo ^[T^[C            ** save to **
+echo
+echo
+echo La commande ^[Tsave to ^[P permet de
+echo sauvegarder les variables en cours dans
+echo un fichier (voir ^[Trestore from^[P).
+echo
+echo Elle n{cessite le nom du fichier en
+echo param}tre.
+echo
+echo
+echo ^[TSyntaxe:^[Psave to^[Efilename
+echo
+echo
+echo Apr}s ex{cution^[D^[Rerrorlevel^[G^[Pvaut:
+echo "    0: ok"
+echo "    1: erreur d'ouverture du fichier"
+echo
+echo
+echo ^[TExemple:^[P
+echo "    save to variable.cfg"
 echo
 echo
 pause
@@ -435,8 +550,11 @@ echo
 pause "   ^[T^[C** Fin de la d{monstration **   ^[P"
 
 # ------------------------------------
+:exit
 cls
 setfont default
+
+exit
 
 # ------------------------------------
 REM cd $1

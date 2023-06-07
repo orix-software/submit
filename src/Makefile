@@ -13,7 +13,7 @@ SHELL_PATH = ../../orix-software/
 SDK_PATH = ../../orix-sdk/
 
 LIB_PATH = $(SDK_PATH)/build/lib
-LIBS = orix-sdk.lib
+LIBS = orix-sdk.lib ../lib/readline.lib
 
 START_ADDR ?= 0x0900
 
@@ -100,7 +100,7 @@ $(BIN_PATH)/$(PROJECT): $(OBJS) $(LIB_PATH)/$(LIBS)
 	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBS) $(TARGET).lib
 ifeq ($(DEBUG),yes)
 	@echo "Create $(PROJECT).sym"
-	@sed -re 's/al 00(.{4}) \.(.+)$$/\1 \2/' $(BIN_PATH)/$(PROJECT).ca.sym | sort > $(BIN_PATH)/$(PROJECT).sym
+	@sed -re 's/al 00(.{4}) \.(.+)$$/\1 \2/' $(BIN_PATH)/$(PROJECT).ca.sym | sort | uniq > $(BIN_PATH)/$(PROJECT).sym
 endif
 
 $(OBJ_PATH):

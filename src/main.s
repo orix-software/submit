@@ -15,16 +15,12 @@ XGETARGV = $2E
 ;----------------------------------------------------------------------
 .include "SDK.mac"
 .include "types.mac"
+; .include "keyboard.inc"
 
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-.ifndef SDK_VERSION
-	.include "macros/SDK-ext.mac"
-.else
-	.out "\tYou can remove macros/SDK-ext.mac from your project"
-	.out "\tYou can remove include/ch376.inc from your project"
-.endif
+.include "include/submit.inc"
 
 ;----------------------------------------------------------------------
 ;				imports
@@ -50,6 +46,9 @@ XGETARGV = $2E
 ; Pour fgets
 .export fp
 
+; Pour cmnd_chain
+.export cmdline
+
 ; Pour fseek, ftell
 .export fpos
 
@@ -61,7 +60,13 @@ XGETARGV = $2E
 .export filename
 .export submit_path
 .export path
-.export vartab, errorlevel, key
+;.export path_len
+.export errorlevel, key
+
+.export entry
+
+.export vars_index
+.export vars_data_index
 
 ;----------------------------------------------------------------------
 ;                       Segments vides
@@ -73,7 +78,7 @@ XGETARGV = $2E
 ;----------------------------------------------------------------------
 ;			Defines / Constantes
 ;----------------------------------------------------------------------
-LINE_MAX_SIZE = 128
+;LINE_MAX_SIZE = 128
 
 ;----------------------------------------------------------------------
 ;				Page Zéro
@@ -103,9 +108,49 @@ LINE_MAX_SIZE = 128
 		unsigned short _argv
 		unsigned char  _argc
 
-		unsigned short errorlevel
-		unsigned short key
-		vartab := errorlevel
+		; Table des variables
+		; [
+		; unsigned char base[VARS_MAX*ST_ENTRYLEN+1]
+		base:
+		.byte	"EXIST",0,0,0,0,0,0
+		.byte	'N'
+		.byte	0
+		.word	$0000
+		;
+		.byte	"ERRORLEVEL",0
+		.byte	'N'
+		.byte	0
+		errorlevel:
+		.word	$0000
+		;
+		.byte	"KEY",0,0,0,0,0,0,0,0
+		.byte	'N'
+		.byte	0
+		key:
+		.word	$0000
+		;
+		;.byte	"PATH",0,0,0,0,0,0,0
+		;.byte	'C'
+		;path_len:
+		;.byte	0
+		;.word	path
+		;
+		.res	256-(*-base), 0
+
+                unsigned char entry[ENTRY_LEN]
+
+		; Nombre de variables (index de la prochaine variable)
+		unsigned char vars_index
+
+		; Tableau des chaines
+		unsigned char vars_datas[VARS_DATALEN*VARS_MAX]
+		; Pointeur vers la prochaine chaine
+		unsigned short vars_data_index
+
+		; unsigned short errorlevel
+		; unsigned short key
+		; vartab := errorlevel
+		; ]
 
 		unsigned char save_x
 
@@ -125,6 +170,7 @@ LINE_MAX_SIZE = 128
 		unsigned long prev_fpos
 
 		unsigned char defaff_save
+
 .popseg
 
 ;----------------------------------------------------------------------
@@ -144,58 +190,39 @@ LINE_MAX_SIZE = 128
 ;       Utilisées:
 ;               -
 ; Sous-routines:
-;       -
+;       check_kernel_version
+;	cmnd_version
+;	init_tables
+;	submit_reopen
+;	submit_close
+;	submit
+;	internal_command
+;	external_command
+;	error_line
+;	print
+;	cputc
+;	getcwd
+;	chdir
+;	_get_argv
+;	fclose
+;	fgets
+;	mfree
+; 	PrintHexByte
+;	XDECIM
+;	crlf
 ;----------------------------------------------------------------------
 .proc _main
 ;		malloc	128, cwd
 
-		; Version du kernel:A=X=Y=0 -> version >= 2020.4
-		;ldx	#$06
-		;.byte	$00, XVARS
-		;jsr	PrintRegs
+		jsr	check_kernel_version
+		bcc	start
 
-		; Numéro de ligne du fichier batch
-		lda	#$00
-		sta	linenum
-		sta	linenum+1
+		jsr	cmnd_version
+		prints	"Kernel version mismatch (need >=2022.4)\r\n"
+		lda	#EUNKNOWN
+		rts
 
-		; Initialise stack_ptr = 0
-		sta	stack_ptr
-
-		; Initialise errorlevel = 0
-		sta	errorlevel
-		sta	errorlevel+1
-
-		; Initialise l'offset ligne courante
-		sta	prev_fpos
-		sta	prev_fpos+1
-		sta	prev_fpos+2
-		sta	prev_fpos+3
-
-		; Initialise l'offset ligne suivante
-		sta	fpos
-		sta	fpos+1
-		sta	fpos+2
-		sta	fpos+3
-
-		; Initialise les pointeurs pour la table des labels
-		sta	label_ofs
-		sta	label_num
-		lda	#$01
-		sta	forward_label
-
-		; Initialise DEFAFF
-		lda	DEFAFF
-		sta	defaff_save
-		lda	#' '
-		sta	DEFAFF
-
-		; Sauvegarde l'adresse de path
-		;lda	#<path
-		;sta	file_pwd
-		;lda	#>path
-		;sta	file_pwd+1
-
+	start:
 		; initmainargs semble poser un problème avec EXEC
 		; c'est à priori lié au malloc fait par inimainargs
 ;		initmainargs _argv
@@ -206,18 +233,25 @@ LINE_MAX_SIZE = 128
 		; Sauvegarde la ligne de commande
 		lda	#<BUFEDT
 		ldy	#>BUFEDT
+;		lda	#$01
+;		initmainargs
 		sta	RES
 		sty	RES+1
 
 		ldy	#$00
-	init:
+	cmdline_loop:
 		lda	(RES),y
 		sta	cmdline,y
-		beq	start
+		beq	@skip
 		iny
-		bne	init
+		bne	cmdline_loop
 
-	start:
+;		mfree	(RES)
+	@skip:
+
+		jsr	init_tables
+
+	try_again:
 		lda	#<cmdline
 		ldy	#>cmdline
 		sta	RESB
@@ -245,8 +279,11 @@ LINE_MAX_SIZE = 128
 
 		jsr	cmnd_version
 		prints	"Filename missing\r\n"
-		rts
 
+		; Voir pour un autre code erreur?
+		lda	#EINVAL
+		ldx	#$00
+		rts
 
 	get_args:
 		inx
@@ -262,6 +299,8 @@ LINE_MAX_SIZE = 128
 		sta	submit_path,y
 		sta	path, y
 		bne	path_loop
+
+		; sty	path_len
 
 ;		getmainarg #1, (_argv), filename
 ; [
@@ -282,18 +321,35 @@ LINE_MAX_SIZE = 128
 
 	loop:
 		;jsr	StopOrCont
-		clc
+;		.byte	$00, XRD0
+;		cmp	#KEY_CTRL_C
+;		bne	cont
+		asl	KBDCTC
 		bcc	cont
+;		lda	KBDCTC
+;		bpl	cont
+
+;		clc
+;		bcc	cont
 
 	end:
+		lda	#EOK
+		sta	errorlevel
+		lda	#$00
+		sta	errorlevel+1
 		fclose	(fp)
+
+	exit:
 		; TODO: vérifier que la pile des CALLS est bien vide
 ;		print	ret_msg
 		; mfree	(_argv)
+		lda	errorlevel
+		ldx	errorlevel+1
 		rts
 
 	cont:
 		ldx	#$03
+
 	save_fpos:
 		lda	fpos_text,x
 		sta	prev_fpos,x
@@ -349,9 +405,14 @@ LINE_MAX_SIZE = 128
 		jsr	internal_command
 		bcc	loop
 
+		cmp	#EAGAIN
+		bne	@suite
+		jmp	try_again
+
+	@suite:
 		; Exit?
 		cmp	#$e4
-		beq	end
+		beq	exit
 
 		cmp	#ENOENT
 		bne	error
@@ -371,6 +432,9 @@ LINE_MAX_SIZE = 128
 		; Restaure DEFAFF
 		lda	defaff_save
 		sta	DEFAFF
+
+		lda	#ENOENT
+		ldx	#$00
 		rts
 
 	error:
@@ -386,9 +450,16 @@ LINE_MAX_SIZE = 128
 
 		cputc	':'
 		pla
+		pha
 		cmp	#ENOENT
-		bne	error_other
+		bne	error_noexec
 		prints	" unknown command"
+		jmp	error_line
+
+	error_noexec:
+		cmp	#ENOEXEC
+		bne	error_other
+		prints	" exec format error"
 		jmp	error_line
 
 	error_other:
@@ -416,6 +487,10 @@ LINE_MAX_SIZE = 128
 		; Restaure DEFAFF
 		lda	defaff_save
 		sta	DEFAFF
+
+		; Code erreur
+		pla
+		ldx	#$00
 		rts
 
 ;	ret_msg:
@@ -431,4 +506,179 @@ LINE_MAX_SIZE = 128
 ;		.asciiz " other"
 .endproc
 
+;----------------------------------------------------------------------
+;
+; Entrée:
+;	-
+; Sortie:
+;	A,Y: modifiés
+;	X: inchangé
+;
+; Variables:
+;       Modifiées:
+;               linenum
+;		stack_ptr
+;		errorlevel
+;		prev_fpos
+;		fpos
+;		label_ofs
+;		label_num
+;		defaff_save
+;		base
+;		tabase
+;		entlen
+;		keylen
+;		keydup
+;		vars_index
+;		vars_data_index
+;		cmdline
+;		DEFAFF
+;		RES
+;       Utilisées:
+;		vars_datas
+;		BUFEDT
+; Sous-routines:
+;       -
+;----------------------------------------------------------------------
+.proc init_tables
+		; Numéro de ligne du fichier batch
+		lda	#$00
+		sta	linenum
+		sta	linenum+1
 
+		; Initialise stack_ptr = 0
+		sta	stack_ptr
+
+		; Initialise errorlevel = 0
+		sta	errorlevel
+		sta	errorlevel+1
+
+		; Initialise l'offset ligne courante
+		sta	prev_fpos
+		sta	prev_fpos+1
+		sta	prev_fpos+2
+		sta	prev_fpos+3
+
+		; Initialise l'offset ligne suivante
+		sta	fpos
+		sta	fpos+1
+		sta	fpos+2
+		sta	fpos+3
+
+		; Initialise les pointeurs pour la table des labels
+		sta	label_ofs
+		sta	label_num
+		lda	#$01
+		sta	forward_label
+
+		; Initialise DEFAFF
+		lda	DEFAFF
+		sta	defaff_save
+		lda	#' '
+		sta	DEFAFF
+
+		; Initialise la table des variables
+		lda	#<base
+		ldy	#>base
+		sta	tabase
+		sty	tabase+1
+
+		lda	#ENTRY_LEN
+		sta	entlen
+
+		lda	#$00
+		sta	base+VARS_MAX*ST_ENTRYLEN
+
+		; Longueur de la clé
+		lda	#ident_len
+		sta	keylen
+
+		; Autorise l'écrasement d'une variable
+		lda	#$ff
+		sta	keydup
+
+		; Nombre de variables dans la table
+		lda	#$03
+		sta	vars_index
+
+		; Pointeur vers la table des données
+		lda	#<vars_datas
+		ldy	#>vars_datas
+		sta	vars_data_index
+		sty	vars_data_index+1
+
+		; Sauvegarde l'adresse de path
+		;lda	#<path
+		;sta	file_pwd
+		;lda	#>path
+		;sta	file_pwd+1
+
+.if 0
+		; initmainargs semble poser un problème avec EXEC
+		; c'est à priori lié au malloc fait par inimainargs
+;		initmainargs _argv
+;		stx	_argc
+;		dex
+;		beq	end
+; [
+		; Sauvegarde la ligne de commande
+		lda	#<BUFEDT
+		ldy	#>BUFEDT
+;		lda	#$01
+;		initmainargs
+		sta	RES
+		sty	RES+1
+
+		ldy	#$00
+	init:
+		lda	(RES),y
+		sta	cmdline,y
+		beq	end
+		iny
+		bne	init
+
+;		mfree	(RES)
+.endif
+	end:
+		rts
+.endproc
+
+;----------------------------------------------------------------------
+;
+; Entrée:
+;	-
+; Sortie:
+;	C : 0-> version kernel compatible, 1-> version kernel incompatible
+;	AY: Kernel version
+;	X : modifié
+;
+; Variables:
+;       Modifiées:
+;               -
+;       Utilisées:
+;               -
+; Sous-routines:
+;       XVARS
+;----------------------------------------------------------------------
+.proc check_kernel_version
+		; Version du kernel:A=X=Y=0 -> version >= 2020.4
+		;ldx	#$06
+		;.byte	$00, XVARS
+		;jsr	PrintRegs
+
+		ldx	#$03
+		.byte $00, XVARS
+
+		cpx	#$06
+		beq	prior_2020_4
+
+		cmp	#$01
+		bcc	prior_2022_4
+		clc
+		rts
+
+	prior_2022_4:
+		sec
+	prior_2020_4:
+		rts
+.endproc

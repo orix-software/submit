@@ -31,9 +31,9 @@
 ;	Modifiées:
 ;		-
 ;	Utilisées:
-;		-
+;		path
 ; Sous-routines:
-;	-
+;	print
 ;----------------------------------------------------------------------
 .proc cmnd_pwd
 		print	path

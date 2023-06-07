@@ -42,7 +42,7 @@
 ;			Defines / Constantes
 ;----------------------------------------------------------------------
 CASE_SENSITIVE_LABELS .set 0
-MAX_LABELS = 20
+MAX_LABELS = 25
 LABEL_TABLE_SIZE = 128
 
 ;----------------------------------------------------------------------
@@ -75,11 +75,19 @@ LABEL_TABLE_SIZE = 128
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_x
+;		labels
+;		label_num
+;		label_ofs
+;		label_line
+;		label_offsets
 ;	Utilisées:
-;		-
+;		submit_line
+;		linenum
+;		fpos_text
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	find_cmnd
 ;----------------------------------------------------------------------
 .proc cmnd_label
 		jsr	skip_spaces
@@ -228,11 +236,18 @@ LABEL_TABLE_SIZE = 128
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_x
+;		ptr
 ;	Utilisées:
-;		-
+;		label_num
+;		labels
+;		label_line
 ; Sous-routines:
-;	-
+;	PrintHexByte
+;	cputc
+;	crlf
+;	prints
+;	XDECIM
 ;----------------------------------------------------------------------
 .proc cmnd_dump
 		; Affiche le num&ro de ligne
@@ -315,5 +330,4 @@ LABEL_TABLE_SIZE = 128
 		rts
 
 .endproc
-
 

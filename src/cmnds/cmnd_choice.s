@@ -33,6 +33,15 @@
 .export cmnd_choice
 
 ;----------------------------------------------------------------------
+;			Chaines statiques
+;----------------------------------------------------------------------
+.pushseg
+	.segment "RODATA"
+		default_msg:
+			.asciiz "YN"
+.popseg
+
+;----------------------------------------------------------------------
 ;			Programme principal
 ;----------------------------------------------------------------------
 .segment "CODE"
@@ -46,11 +55,23 @@
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_a
+;		save_x
+;		save_y
+;		ptr
+;		submit_line
+;		errorlevel
 ;	Utilisées:
-;		-
+;		default_msg
+;		KBDCTC
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	string_delim
+;	count_choices
+;	XWSTR0
+;	cputc
+;	XVIDBU
+;	crlf
 ;----------------------------------------------------------------------
 .proc cmnd_choice
 		; TODO: à transformer en commande externe
@@ -224,6 +245,20 @@
 		clc
 		rts
 
+	;----------------------------------------------------------------------
+	;
+	; Entrée:
+	;	-
+	; Sortie:
+	;	-
+	; Variables:
+	;	Modifiées:
+	;		save_x
+	;	Utilisées:
+	;		ptr
+	; Sous-routines:
+	;	-
+	;----------------------------------------------------------------------
 	.proc count_choices
 			ldy	#$ff
 
@@ -239,13 +274,4 @@
 			rts
 	.endproc
 .endproc
-
-;----------------------------------------------------------------------
-;			Chaines statiques
-;----------------------------------------------------------------------
-.pushseg
-	.segment "RODATA"
-		default_msg:
-			.asciiz "YN"
-.popseg
 

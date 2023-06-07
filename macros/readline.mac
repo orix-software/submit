@@ -1,0 +1,268 @@
+.ifndef _READLINE_MAC_
+	SDK::_inputstr_ .set 0
+
+	;----------------------------------------------------------------------
+	;
+	; usage:
+	;       input prompt [, len [, var]]
+	;
+	; note:
+	;	- prompt may be: "string", var
+	;	- len may be: value, var
+	;		if var, will receive the input length on return (X register)
+	;	- var if present will receive the buffer address (AY registers)
+	;
+	; Call readline function
+	;----------------------------------------------------------------------
+	.macro input prompt, len, var
+
+		.ifnblank prompt
+			.if (.match(.left(1, {prompt}), {"\""}) )
+
+				.if .strlen(prompt) > 0
+					; Le test est inutile, ca65 remontera une erreur avant
+					.if .match(.right(1,{prompt}), {"\""})
+
+						lda #<.ident(.sprintf("_inputstr%d", SDK::_inputstr_))
+						ldy #>.ident(.sprintf("_inputstr%d", SDK::_inputstr_))
+
+						.pushseg
+							.segment "RODATA"
+								.ident(.sprintf("_inputstr%d", SDK::_inputstr_)):
+								.asciiz prompt
+						.popseg
+
+						SDK::_inputstr_ .set SDK::_inputstr_+1
+					.else
+						.out "Erreur: '\"' manquant"
+					.endif
+				.else
+					.out "***empty prompt"
+					lda	#$00
+					ldy	#$00
+				.endif
+			.else
+				lda	#<prompt
+				ldy	#>prompt
+			.endif
+		.else
+			lda	#$00
+			ldy	#$00
+		.endif
+
+		.ifnblank len
+			.if .const(len)
+				ldx	#len
+			.else
+				ldx	len
+			.endif
+		.else
+			ldx	#$00
+		.endif
+
+		jsr	readline
+
+		.ifnblank var
+			sta	var
+			sty	var+1
+		.endif
+
+		.ifnblank len
+			.if .not .const(len)
+				stx	len
+			.endif
+		.endif
+	.endmacro
+
+	;----------------------------------------------------------------------
+	;
+	; usage:
+	;
+	; Call readline function
+	;----------------------------------------------------------------------
+	.macro lineinput col, row, fill_char, len, var
+		.out .sprintf("paramcount = %d", .paramcount)
+		.out .sprintf("tcount = %d", .tcount(col))
+
+		.if (.match(.left(1, {col}), {""}) )
+			.out "string"
+		.endif
+
+		.if .paramcount = 5
+		        ; lineinput col, row, fill_char, len var
+			gotoxy	col, row
+
+			.ifnblank fill_char
+				set_option 1, fill_char
+			.endif
+
+			input "", len, var
+
+		.elseif .paramcount = 3
+                        ; lineinput fill_char, len, var
+			.ifnblank col
+				set_option 1, col
+			.endif
+
+			input "", row, fill_char
+
+		.elseif .paramcount = 2
+		        ; lineinput len, var
+			input "", col, row
+
+		.elseif .paramcount = 1
+		        ; lineinput var
+			input "", 0, col
+
+		.elseif .paramcount = 0
+		        ; lineinput
+			input
+		.endif
+
+	.endmacro
+
+	;---------------------------------------------------------------------------
+	;
+	;---------------------------------------------------------------------------
+	.macro set_option option, value
+		.local _option_, _value_
+
+		; 1: fill char
+		;	A := char
+		; 2: prompt
+		;	AY := prompt address
+		; 3: hidden input
+		;	A := $40 -> On, $bf -> Off
+		;    no clear screen
+		;	A := $01 -> Off, $fe -> Off
+		;    return if cc
+		;	A := $02 -> On, $fd -> Off
+		;    return if cs
+		;	A := $04 -> On, $fb -> Off
+		;    autoexit
+		;	A := $08 -> On, $f7 -> Off
+
+		.if .xmatch({value}, on) .or .xmatch({value}, ON)
+			.out "on"
+			_value_ .set $00
+
+		.elseif .xmatch({value}, off) .or .xmatch({value}, OFF)
+			.out "off"
+			_value_ .set $ff
+
+		.else
+			.out .sprintf("autre: %s", .string(value))
+			.ifconst value
+				_value_ .set value
+			.endif
+		.endif
+
+		.if .xmatch({option}, hidden_char) .or .xmatch({option}, HIDDEN_CHAR)
+			.out "hidden_char"
+			_option_ .set 0
+
+		.elseif .xmatch({option}, fill_char) .or .xmatch({option}, FILL_CHAR)
+			.out "fill_char"
+			_option_ .set 1
+
+		.elseif .xmatch({option}, fill_buffer) .or .xmatch({option}, FILL_BUFFER)
+			; b7
+			.out "fill_buffer"
+			_option_ .set 2
+			;_value_ = $80
+
+		.elseif .xmatch({option}, password_mode) .or .xmatch({option}, PASSWORD_MODE)
+			; b6
+			.out "password mode"
+			_option_ .set 3
+			_value_ .set _value_ ^ $40
+
+		.elseif .xmatch({option}, no_cls) .or .xmatch({option}, NO_CLS)
+			; b0
+			.out "no_cls"
+			_option_ .set 3
+			_value_ .set _value_ ^ $01
+
+		.elseif .xmatch({option}, return_if_cc) .or .xmatch({option}, RETURN_IF_CC)
+			; b1
+			.out "return if cc"
+			_option_ .set 3
+			_value_ .set _value_ ^ $02
+
+		.elseif .xmatch({option}, return_if_cs) .or .xmatch({option}, RETURN_IF_CS)
+			; b2
+			.out "return if cs"
+			_option_ .set 3
+			_value_ .set _value_ ^ $04
+
+		.elseif .xmatch({option}, autoexit) .or .xmatch({option}, AUTOEXIT)
+			; b3
+			.out "autoexit"
+			_option_ .set 3
+			_value_ .set _value_ ^ $08
+
+		.else
+			.error .sprintf("unknown option: %s", .string(option))
+		.endif
+
+		; .out .sprintf("value: %s", .string(_value_))
+
+		.ifconst _option_
+			; .out "constante"
+			ldx	#_option_
+		.else
+			; .out "pas constante"
+			ldx	#_option_
+		.endif
+
+		.ifconst value
+			; .out "constante"
+			lda	#<_value_
+			ldy	#>_value_
+		.else
+			; .out "pas constante"
+			lda	#<value
+			ldy	#>value
+		.endif
+
+		jsr	readline_set_option
+
+	.endmacro
+
+	;---------------------------------------------------------------------------
+	;
+	;---------------------------------------------------------------------------
+	.macro set_callback function, address
+		.local function_id
+
+		; 0: Funct+<key>
+		; 1: KEY_DOWN
+		; 2: KEY_UP
+		; 3: KEY_ESC
+
+		.if .xmatch({function}, key_funct) .or .xmatch({function}, KEY_FUNCT)
+			function_id .set 0
+
+		.elseif .xmatch({function}, key_down) .or .xmatch({function}, KEY_DOWN)
+			function_id .set 1
+
+		.elseif .xmatch({function}, key_up) .or .xmatch({function}, KEY_UP)
+			function_id .set 2
+
+		.elseif .xmatch({function}, key_esc) .or .xmatch({function}, KEY_ESC)
+			function_id .set 3
+
+		.else
+			.error .sprintf("unknown callback function: %s", .string(function))
+		.endif
+
+		lda	#<(address-1+1)
+		ldy	#>(address-1+1)
+		ldx	#function_id
+
+		jsr	readline_set_callback
+
+	.endmacro
+
+	_READLINE_MAC_ = 1
+.endif

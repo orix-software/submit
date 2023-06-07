@@ -71,11 +71,31 @@ LINE_MAX_SIZE = 128
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_y
+;		linenum
+;		fpos
+;		fpos_text
+;		prev_fpos_save
+;		save_linenum
+;		line
 ;	Utilisées:
-;		-
+;		label_num
+;		labels
+;		label_line
+;		label_offsets
+;		forward_label
+;		prev_fpos
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	find_cmnd
+;	buffer_reset
+;	submit_reopen
+;	store_label
+;	fgets
+;	ftell
+;	submit
+;	cmnd_label
+;	search_label
 ;----------------------------------------------------------------------
 .proc cmnd_goto
 		jsr	skip_spaces
@@ -261,6 +281,23 @@ LINE_MAX_SIZE = 128
 		sec
 		rts
 
+	;----------------------------------------------------------------------
+	;
+	; Entrée:
+	;	-
+	;
+	; Sortie:
+	;	-
+	;
+	; Variables:
+	;       Modifiées:
+	;		save_label
+	;       Utilisées:
+	;		save_y
+	;		submit_line
+	; Sous-routines:
+	;	-
+	;----------------------------------------------------------------------
 	.proc store_label
 			ldx	save_y
 			ldy	#$00
@@ -288,6 +325,23 @@ LINE_MAX_SIZE = 128
 			rts
 	.endproc
 
+	;----------------------------------------------------------------------
+	;
+	; Entrée:
+	;	-
+	;
+	; Sortie:
+	;	-
+	;
+	; Variables:
+	;       Modifiées:
+	;		submit_line
+	;       Utilisées:
+	;		save_label
+	;		labels
+	; Sous-routines:
+	;	find_cmnd
+	;----------------------------------------------------------------------
 	.proc search_label
 			ldx	#$ff
 		loop:

@@ -31,16 +31,16 @@
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
-;
+;	-
 ; Sortie:
-;
+;	Z: 1-> INT_SUCCESS, 0-> Erreur
 ; Variables:
 ;	Modifiées:
 ;		-
 ;	Utilisées:
-;		-
+;		fpos
 ; Sous-routines:
-;	-
+;	WaitResponse
 ;----------------------------------------------------------------------
 .proc fseek
 		lda	#CH376_BYTE_LOCATE

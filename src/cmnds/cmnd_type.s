@@ -44,11 +44,12 @@
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		exec_address
+;		submit_line
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	skip_spaces
 ;----------------------------------------------------------------------
 .proc cmnd_type
 		; Alias pour cat
@@ -79,7 +80,7 @@
 		dey
 
 	cat:
-		; Indique qu'il n'y a pas de commandde interne TYPE
+		; Indique qu'il n'y a pas de commande interne TYPE
 		; jmp	external_command
 		sec
 		lda	#ENOENT
@@ -91,5 +92,4 @@
 		sec
 		rts
 .endproc
-
 

@@ -24,10 +24,11 @@
 ;
 ; Sortie:
 ;	A : Modifié
+;	X,Y: inchangés
 ;
 ; Variables:
 ;	Modifiées:
-;		fsize: Tailledu fichier
+;		fpos
 ;	Utilisées:
 ;		-
 ; Sous-routines:

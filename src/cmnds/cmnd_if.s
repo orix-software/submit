@@ -16,6 +16,11 @@
 XOPENDIR = $2f
 
 ;----------------------------------------------------------------------
+;			include application
+;----------------------------------------------------------------------
+.include "submit.inc"
+
+;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
 .importzp var1, var2
@@ -33,6 +38,11 @@ XOPENDIR = $2f
 
 .import spar1
 	spar := spar1
+
+;.import var_getvalue
+;.importzp object
+.import find_var
+.import entry
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -55,6 +65,7 @@ XOPENDIR = $2f
 ;----------------------------------------------------------------------
 .segment "CODE"
 
+.if 0
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
@@ -74,6 +85,20 @@ XOPENDIR = $2f
 		jsr	skip_spaces
 		beq	error
 
+		; if "string1" = "string2"?
+		sta	save_a
+		lda	submit_line,x
+		cmp	#'"'
+		bne	if_value
+		jsr	if_string
+		bcs	error
+		beq	found
+		; Équivalent à bne false
+		; le clc est inutile ici
+		; clc
+		rts
+
+	if_value:
 		; Initialise la valeur de test par défaut
 		lda	#$00
 		sta	var2
@@ -86,6 +111,7 @@ XOPENDIR = $2f
 		bcs	error
 
 		; A: indice de la variable interne
+		; (EXIST = pseudo variable 0)
 		;pha
 		bne	if_var
 
@@ -264,6 +290,250 @@ XOPENDIR = $2f
 		sec
 		rts
 .endproc
+.else
+;----------------------------------------------------------------------
+;
+; Entrée:
+;	X: offset sur le premier caractère suivant la commande
+;
+; Sortie:
+;
+; Variables:
+;	Modifiées:
+;		save_a
+;		save_x
+;		save_y
+;		var1
+;		var2
+;		ptr
+;		cmp_op
+;	Utilisées:
+;		submit_line
+;		entry
+; Sous-routines:
+;	skip_spaces
+;	if_string
+;	find_var
+;	cmnd_exist
+;	internal_command
+;	spar
+;----------------------------------------------------------------------
+.proc cmnd_if
+		jsr	skip_spaces
+		beq	error
+
+		; if "string1" = "string2"?
+		sta	save_a
+		lda	submit_line,x
+		cmp	#'"'
+		bne	if_value
+		jsr	if_string
+		bcs	error
+		beq	found
+		; Équivalent à bne false
+		; le clc est inutile ici
+		; clc
+		rts
+
+	if_value:
+		; Initialise la valeur de test par défaut
+		lda	#$00
+		sta	var2
+		sta	var2+1
+
+		; Recherche la variable
+		jsr	find_var
+		bcs	error
+
+		; A: indice de la variable interne
+		; (EXIST = pseudo variable 0)
+		;pha
+		cmp	#$00
+		bne	if_var
+
+		; if exist <file> <instruction>
+	if_exist:
+		jsr	cmnd_exist
+		bcs	error
+		lda	var1
+		beq	found
+		clc
+		rts
+
+	error:
+		sec
+		lda	#EINVAL
+		rts
+
+	no_value:
+		;pla
+		ldx	save_x
+		lda	#$ff
+		sec
+		rts
+
+	found:
+		pla
+		pla
+		jsr	skip_spaces
+		jmp	internal_command
+
+
+	if_var:
+		; Récupère sa valeur
+		lda	entry+st_entry::data_ptr
+		ldy	entry+st_entry::data_ptr+1
+		sta	var1
+		sty	var1+1
+
+	; À partir d'ici, le reste est identique
+
+		; if <variable> <value> <instruction>
+		; Saute les espaces
+		jsr	skip_spaces
+
+		; Sauvegarde l'offset dans submit_line
+		stx	save_x
+		beq	no_value
+
+		ldy	#>submit_line
+		clc
+		txa
+		adc	#<submit_line
+		sta	save_a
+		bcc	_if
+		iny
+
+	_if:
+		; Inverse le poids fort et le poids faible
+		; il faut A=MSB et Y=LSB pour setcbp
+		tya
+		ldy	save_a
+
+		; jsr	setcbp
+
+		; Ajout comparateur
+		sty	ptr
+		sta	ptr+1
+
+		; <: 60 -> 1	-> 3C 0011 11 00
+		; =: 61 -> 2	-> 3D 0011 11 01
+		; >: 62 -> 4	-> 3E 0011 11 10
+		; Par défaut: >=
+		lda	#($02 | $04)
+		sta	cmp_op
+
+		ldy	#$00
+		lda	(ptr),y
+
+		ldx	#($01|$04)
+		cmp	#'#'
+		beq	ok
+
+		cmp	#'0'
+		bcc	error
+
+		cmp	#'9'+1
+		bcc	num
+
+		cmp	#'>'+1
+		bcs	error
+
+		ldx	#$01
+		cmp	#'<'
+		bcc	error
+
+		beq	ok
+
+		ldx	#$02
+		cmp	#'='
+		beq	ok
+
+		ldx	#$04
+		cmp	#'>'
+		bne	error
+
+	ok:
+		stx	cmp_op
+		inc	ptr
+		bne	num
+		inc	ptr+1
+
+	num:
+		ldy	ptr
+		lda	ptr+1
+		; Fin ajout
+
+
+		ldx	#%10000000
+		jsr	spar
+		.byte	var2, $00
+		bcs	value_error
+
+		; Ici AY pointe sur le caractère suivant la valeur (A=MSB)
+		sta	save_a
+		sty	save_y
+
+	compare:
+
+		; Il faudrait utiliser l'indice de la variable interne pour
+		; faire la comparaison
+		lda	var1+1
+		cmp	var2+1
+		bne	test
+		lda	var1
+		cmp	var2
+
+		; IF ERRORLEVEL n xxxx
+		; Exécute xxx si ERRORLEVEL >= n
+		; À voir pour étendre la syntaxe en autorisant un comparateur (<, =, .>)
+	test:
+		php
+		lda	cmp_op
+		plp
+		beq	eq
+		bcs	gt
+
+	lt:
+		and	#$01
+		bne	true
+
+	false:
+		clc
+		rts
+
+	sup_equal:
+	eq:
+		and	#$02
+		beq	false
+		bne	true
+
+	gt:
+		and	#$04
+		beq	false
+
+	true:
+		; Recalcule l'offset par rapport à submit_line
+		sec
+		lda	save_y
+		sbc	#<submit_line
+		tax
+
+		; Oublie le retour vers internal_command
+		pla
+		pla
+
+		; Relance une recherche avec la nouvelle commande
+		jmp	internal_command
+
+	value_error:
+		; pla
+		ldx	save_x
+		lda	#$fe
+		sec
+		rts
+.endproc
+.endif
 
 ;----------------------------------------------------------------------
 ;
@@ -274,11 +544,18 @@ XOPENDIR = $2f
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_a
+;		save_x
+;		save_y
+;		line
+;		fp
 ;	Utilisées:
-;		-
+;		submit_line
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	is_dir
+;	fopen
+;	fclose
 ;----------------------------------------------------------------------
 .proc cmnd_exist
 		jsr	skip_spaces
@@ -309,6 +586,7 @@ XOPENDIR = $2f
 		lda	#<line
 		ldy	#>line
 
+; TEMPORAIRE - TESTS
 		jsr	is_dir
 		beq	is_file
 		lda	#$00
@@ -359,6 +637,21 @@ XOPENDIR = $2f
 		sec
 		rts
 
+	;----------------------------------------------------------------------
+	;
+	; Entrée:
+	;	-
+	;
+	; Sortie:
+	;
+	; Variables:
+	;	Modifiées:
+	;		-
+	;	Utilisées:
+	;		-
+	; Sous-routines:
+	;	XOPENDIR
+	;----------------------------------------------------------------------
 	.proc is_dir
 			; Sortie:
 			;	Z=0: si c'est un répertoire
@@ -387,5 +680,137 @@ XOPENDIR = $2f
 			plp
 			rts
 	.endproc
+.endproc
+
+
+;----------------------------------------------------------------------
+; TODO: ajouter test '#'
+;
+; Entrée:
+;	X: offset sur le premier "
+;
+; Sortie:
+;	C: 1-> erreur de syntaxe
+;	Z: 1-> string1 = string2
+;	Z: 0-> string1 != string2
+;
+; Variables:
+;	Modifiées:
+;		save_a
+;		save_x
+;		var1
+;		var2
+;
+;	Utilisées:
+;		- submit_line
+; Sous-routines:
+;	- string_delim
+;	- skip_spaces
+;----------------------------------------------------------------------
+.proc if_string
+		; Pointeur vers le début de la chaîne (après le ")
+		stx	save_x
+		inc	save_x
+
+		lda	save_a
+		jsr	string_delim
+		; AY = Adresse de la chaine terminée par un \0
+		; X  = Offset vers le \0
+		sta	var1
+		sty	var1+1
+
+		; Calcul de la longueur de la chaine
+		sec
+		txa
+		sbc	save_x
+		sta	var2+1
+
+		; Fin de ligne?
+		inx
+		jsr	skip_spaces
+		beq	error
+
+		; '='?
+		sta	save_a
+		lda	submit_line,x
+		ldy	#$02
+		cmp	#'='
+		beq	ok
+
+		ldy	#($01|$04)
+		cmp	#'#'
+		bne	error
+
+	ok:
+		sty	cmp_op
+		; "string2"
+		inx
+		lda	save_a
+		jsr	skip_spaces
+		beq	error
+
+		sta	save_a
+		lda	submit_line,x
+		cmp	#'"'
+		bne	error
+		; Pointeur vers le début de la chaîne (après le ")
+		stx	save_x
+		inc	save_x
+
+		lda	save_a
+		jsr	string_delim
+		; Sauvegarde poids faible de string2
+		sta	var2
+
+		; Ajuste X pour pointer après string2
+		inx
+		; Calcul de la longueur de la chaine
+		; (faire clc et non sec à cause du inx juste au dessus)
+		;sec
+		clc
+		txa
+		sbc	save_x
+		; Même longueur que string1?
+		cmp	var2+1
+		bne	string_neq
+
+	string_cmp:
+		; Sauvegarde poids fort de string2
+		sty	var2+1
+
+		; Sauvegarde la longueur des chaines
+		tay
+
+;		; Ajuste X pour pointer après string2
+;		inx
+
+	string_loop:
+		dey
+		bmi	string_eq
+		lda	(var1),y
+		cmp	(var2),y
+		beq	string_loop
+
+	string_neq:
+		; Si on arrive ici -> Z=0
+		; Inversion si pas '='
+		lda	cmp_op
+		and	#$02			; =
+		clc
+		rts
+
+	string_eq:
+		; On peut arriver ici via le bmi string_eq
+		; donc on force Z=1
+;		iny
+		; Inversion si '#'
+		lda	cmp_op
+		and	#($01|$04)		; #
+		clc
+		rts
+
+	error:
+		sec
+		rts
 .endproc
 

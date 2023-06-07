@@ -28,6 +28,8 @@
 ;----------------------------------------------------------------------
 ;			Defines / Constantes
 ;----------------------------------------------------------------------
+VERSION = $20224011
+.define PROGNAME "submit"
 
 ;----------------------------------------------------------------------
 ;				Page Zéro
@@ -57,8 +59,11 @@
 ;	- prints
 ;----------------------------------------------------------------------
 .proc cmnd_version
-        prints  "submit version 1.0 - 2022.2\r\n"
-        rts
+		.out .sprintf("%s version: %x.%x - %x.%x", PROGNAME, ::VERSION >> 16, (::VERSION & $f000)>>12 , (::VERSION & $ff0)>>4, (::VERSION & $0f))
+
+;	        prints  "submit version 1.0 - 2022.2\r\n"
+		prints  .sprintf("%s version %x.%x - %x.%x\r\n", PROGNAME, (::VERSION & $ff0)>>4, (::VERSION & $0f), ::VERSION >> 16, (::VERSION & $f000)>>12)
+		rts
 .endproc
 
 ;----------------------------------------------------------------------

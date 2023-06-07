@@ -9,16 +9,15 @@ l'exception des commandes internes suivantes:
 
 qui ne sont pas encore supportees.
 
-Les commandes **call**,**choice**,**cls**,
-**getkey**,**goto**,**if**,**pause**,
-**return** et **type** ont ete ajoutees.
+Les commandes **call**,**chain**,**choice**
+,**cls**,**getkey**,**goto**,**if**,
+**pause**,**restore**,**return**,**save** et **type** ont ete ajoutees.
 
 La commande **echo** est etendue par rapport a celle du shell.
 
 Une ligne ne peut exceder *128* caracteres ou *200* apres expansion des variables.
 
 Il n'y a ^Bpas de taille maximale^G pour un fichier submit.
-
 # Description
 \
 \
@@ -41,11 +40,11 @@ Les lignes commencant par ^T:^P definissent un label.
 \
 \
 \
-# call
+# Call
 \
 \
 La commande **call** permet de faire
-appell a une sous-routine terminee
+appel a une sous-routine terminee
 par **return**.
 \
 \
@@ -65,7 +64,31 @@ call^Flabel
 \
 \
 \
-# choice
+# Chain
+\
+\
+La commande **chain** permet de poursuivre
+l'execution a partir d'un autre script.
+\
+\
+## Syntaxe:^P
+chain ^Efilename
+
+En cas d'erreur ^D^Rerrorlevel^G^Pvaut 1
+et le script appelant se poursuit.
+
+
+## Exemple:^P
+- chain script.sub
+\
+\
+\
+\
+\
+\
+\
+\
+# Choice
 \
 \
 La commande **choice** permet d'afficher
@@ -86,7 +109,7 @@ choice ^B[-n] [-c<liste>] [msg]
 \
 \
 \
-# echo
+# Echo
 \
 \
 La commande **echo** accepte les caracteres de controle.
@@ -196,16 +219,62 @@ existe alors^Finstruction^Gsera executee.
 - [1] if errorlevel 2 goto choix2
 - [2] if exist fichier echo Ok
 - [3] if errorlevel < 2 echo inferieur
-- [4] if keu # 65 echo different
+- [4] if key # 65 echo different
 \
 \
-[1] Ira au label^Fchoix2^Gsi^D^Rerrorlevel^P^G est superieur ou egale a^C2^G.
+[1] Ira au label^Fchoix2^Gsi^D^Rerrorlevel ^P^G est superieur ou egale a^C2^G.
 
 [2] Affiche^BOk^Gsi^Efichier^Gexiste.
 
 [3] Affiche^Binferieur^Gsi^D^Rerrorlevel ^P^G est inferieur a^C2^G.
 
 [4] Affiche^Bdifferent^Gsi^D^Rkey ^P^G est different de^C65^G.
+\
+\
+\
+\
+# Input (1/2)
+\
+\
+La commande **input** affiche un message
+et attend la saisie d'une chaine de caracteres.
+\
+## Syntaxe:^P
+^Pinput^B[msg],[len],^D^Rvar^G^P
+\
+## Parametres:^P
+- ^Bmsg^G est le message affiche.
+- Valeur par defaut: aucun
+\
+- ^Blen^G est la longueur du champ.
+- Valeur par defaut: 32
+- Valeur maximale  : 32
+\
+- ^D^Rvar^G^P   est le nom de la variable.
+\
+\
+\
+\
+# Input (2/2)
+\
+\
+Apres execution^D^Rerrorlevel^G^Pvaut:
+\
+- 0: ok
+- 1: saisie vide
+- 2: sortie par ctrl+c
+\
+\
+### Exemples:^P
+\
+- input "choix ",10,var
+- imput "",,var
+\
+\
+\
+\
+\
+\
 \
 \
 \
@@ -225,6 +294,52 @@ pause^B[message]
 Le message par defaut est:
 
       ^LPress any key to continue
+\
+\
+\
+\
+\
+\
+# Restore (1/2)
+\
+\
+La commande **restore from** permet
+de recharger des variables a partir
+d'un fichier (voir **save to**).
+\
+Elle necessite le nom du fichier en
+parametre.
+\
+\
+## Syntaxe:^P
+restore from^Efilename
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+# Restore (2/2)
+\
+\
+Apres execution^D^Rerrorlevel^G^Pvaut:
+\
+- 0: ok
+- 1: erreur d'ouverture du fichier
+- 2: '=' manquant
+- 3: nom de variable trop long
+- 4: trop de variables
+- 5: chaine trop longue
+- 6: erreur interne
+\
+### Exemple:^P
+\
+- restore from variable.cfg
+\
 \
 \
 \
@@ -256,6 +371,26 @@ return
 \
 \
 \
+# Save
+\
+\
+La commande **save to** permet de
+sauvegarder les variables en cours dans
+un fichier (voir **restore from**).
+\
+Elle necessite le nom du fichier en parametre.
+\
+##  Syntaxe:^Psave to^Efilename
+\
+Apres execution^D^Rerrorlevel^G^Pvaut:
+\
+- 0: ok
+- 1: erreur d'ouverture du fichier
+\
+### Exemple:^P
+\
+- save to variable.cfg
+\
 # Text (1/2)
 \
 \
@@ -277,7 +412,7 @@ Les codes de controles sont interpretes ainsi que les parametres du script.
 # Text (2/2)
 \
 \
-^TExemple:^P
+### Exemple:^P
 
 text
 

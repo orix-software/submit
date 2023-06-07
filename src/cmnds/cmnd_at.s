@@ -52,11 +52,18 @@
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_a
+;		save_x
+;		save_y
+;		var1
+;		var2
 ;	Utilisées:
-;		-
+;		submit_line
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	cmnd_echo
+;	spar
+;	cputc
 ;----------------------------------------------------------------------
 .proc cmnd_at
 		jsr	skip_spaces

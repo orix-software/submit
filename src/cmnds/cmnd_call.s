@@ -34,6 +34,8 @@
 .export cmnd_return
 
 .export stack_ptr
+.export push
+.export pop
 
 ;----------------------------------------------------------------------
 ;			Defines / Constantes
@@ -74,7 +76,8 @@ typedef .struct stack_item
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	push
+;	cmnd_goto
 ;----------------------------------------------------------------------
 .proc cmnd_call
 		jsr	push
@@ -97,7 +100,7 @@ typedef .struct stack_item
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	pop
 ;----------------------------------------------------------------------
 .proc cmnd_return
 		jsr	pop
@@ -115,9 +118,11 @@ typedef .struct stack_item
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		stack_ptr
+;		stack
 ;	Utilisées:
-;		-
+;		linenum
+;		fpos_text
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
@@ -177,11 +182,14 @@ typedef .struct stack_item
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		stack_ptr
+;		linenum
+;		fpos
+;		fpos_text
 ;	Utilisées:
-;		-
+;		stack
 ; Sous-routines:
-;	-
+;	buffer_reset
 ;----------------------------------------------------------------------
 .proc pop
 		pha

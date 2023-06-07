@@ -68,9 +68,18 @@ LINE_MAX_SIZE = 128
 ;	Modifiées:
 ;		-
 ;	Utilisées:
-;		-
+;		line
+;		endtext
+;		submit_line
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	submit_reopen
+;	submit_close
+;	fgets
+;	submit
+;	find_cmnd
+;	XWSTR0
+;	crlf
 ;----------------------------------------------------------------------
 .proc cmnd_text
 		jsr	skip_spaces

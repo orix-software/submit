@@ -40,7 +40,11 @@
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	string_delim
+;	XWSTR0
+;	cgetc
+;	prints
 ;----------------------------------------------------------------------
 .proc cmnd_pause
 		jsr	skip_spaces
@@ -60,5 +64,4 @@
 		clc
 		rts
 .endproc
-
 

@@ -42,11 +42,12 @@
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		key
+;		KBDCTC
 ;	Utilisées:
 ;		-
 ; Sous-routines:
-;	-
+;	XVIDBU
 ;----------------------------------------------------------------------
 .proc cmnd_getkey
 		; Vide le buffer clavier
@@ -54,7 +55,7 @@
                 .byte	$00, XVIDBU
 		asl	KBDCTC
 
-		; Initialise errorlevel
+		; Initialise key
 		lda	#$00
 		sta	key
 		sta	key+1

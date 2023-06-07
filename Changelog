@@ -1,0 +1,16 @@
+2022.4
+ + Ajout paramàtre pour exit: exit n (defaut: EOK)
+ + Modification instruction if: if "string1" = "string2"
+ + Ajout récupération de la valeur exit d'un programme externe ou shell dans
+ errorlevel
+ + Ajout vérification de la version du kernel
+ + Ajout erreur "exec format error" si le programme externe n'est pas en mode
+ reloc
+ + Ajout utilisation de $errorlevel et $key comme variables
+ + Ajout instruction "restore from <filename>" pour charger des variables
+ en mémoire à partir d'un fichier (demande Jede)
+ - Ajout instruction "save to <filename>" pour sauvegarder les variables dans
+ un fichier
+ - Ajout instruction "input [string], [len], ident" pour la saisie utilisateur
+ - Modification instruction if: if "string1" # "string2"
+ - Ajout instruction "chain filename" pour le chaînage des scripts

@@ -21,10 +21,10 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import PrintRegs
+;.import PrintRegs
 
-.import submit_close
-.import submit_reopen
+;.import submit_close
+;.import submit_reopen
 
 .import submit_line
 
@@ -53,14 +53,15 @@
 ;	X: offset vers le premier caractère non ' '
 ;
 ; Sortie:
-;
+;	C: 0->Ok, 1->Erreur
 ; Variables:
 ;       Modifiées:
-;               -
+;               save_x
+;		errorlevel
 ;       Utilisées:
-;               -
+;               submit_line
 ; Sous-routines:
-;       -
+;       XEXEC
 ;----------------------------------------------------------------------
 .proc external_command
 		stx	save_x
@@ -69,7 +70,7 @@
 
 		; Sauvegarde la banque active
 		; EXEC revient avec la banque 5 active
-		lda	$0321
+		lda	VIA2::PRA
 		pha
 
 		clc
@@ -84,12 +85,22 @@
 
 ;		jsr	PrintRegs
 
-		cmp	#EOK
+		; Le code de retour du kernel est dans:
+		; Kernel VERSION_2022_2 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_3 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_4 ($01) -> Y (code retour de  la commande dans A)
+		;cmp	#EOK
+		cpy	#EOK
 		bne	error
+
+		; Code erreur de la commande dans ERRORLEVEL
+		sta	errorlevel
+		lda	#$00
+		sta	errorlevel+1
 
 		; Restaure la banque
 		pla
-		sta	$0321
+		sta	VIA2::PRA
 
 		;jsr	submit_reopen
 		clc
@@ -98,7 +109,7 @@
 	error:
 		; Restaure la banque
 		pla
-		sta	$0321
+		sta	VIA2::PRA
 ;		print	unknown_msg
 ;		print	submit_line
 ;		crlf
@@ -106,7 +117,13 @@
 		;jsr	submit_reopen
 
 		ldx	save_x
-		lda	#ENOENT
+		; Le code de retour du kernel est dans:
+		; Kernel VERSION_2022_2 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_3 ($00)
+		; Kernel VERSION_2022_4 ($01) -> Y (code retour de  la commande dans A)
+		; lda	#ENOENT
+		tya
+
 		sec
 		rts
 

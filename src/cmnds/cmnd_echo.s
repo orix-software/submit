@@ -47,11 +47,15 @@
 ;
 ; Variables:
 ;	Modifiées:
-;		-
+;		save_a
+;		save_y
 ;	Utilisées:
-;		-
+;		submit_line
 ; Sous-routines:
-;	-
+;	skip_spaces
+;	string_delim
+;	XWSTR0
+;	crlf
 ;----------------------------------------------------------------------
 .proc cmnd_echo
 		; Prendre en compte un paramètre ON|OFF
