@@ -18,7 +18,7 @@ VERBOSE ?= 0
 # Définition des outils
 #
 
-MD2HLP = $(MD2HLP_PATH)/md2hlp.py
+MD2HLP = $(MD2HLP_PATH)/md2hlp.py3
 
 #
 # Définition des options pour les outils
@@ -64,14 +64,14 @@ OBJS= $(addprefix $(MAN_PATH)/, $(patsubst %.md,%.hlp, $(SRC)))
 #%.hlp: %.md
 $(MAN_PATH)/%.hlp: %.md
 	@echo "Create $(PROJECT).hlp"
-	@python $(MD2HLP) $(MD2HLPFLAGS) -o $@ -f $<
+	@python3 $(MD2HLP) $(MD2HLPFLAGS) -o $@ -f $<
 
 
 $(MAN_PATH)/$(PROJECT).hlp: $(PROJECT).md
 
 $(MAN_PATH)/subdoc.hlp: subdoc.md
 	@echo "Create $@"
-	@python $(MD2HLP) $(MD2HLPFLAGS) -c subdoc.cfg -o $@ -f $<
+	@python3 $(MD2HLP) $(MD2HLPFLAGS) -c subdoc.cfg -o $@ -f $<
 
 $(MAN_PATH):
 	@echo "Create $(BUILD_PATH) directory"
