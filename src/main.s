@@ -231,10 +231,10 @@ XGETARGV = $2E
 ;		beq	end
 ; [
 		; Sauvegarde la ligne de commande
-		lda	#<BUFEDT
-		ldy	#>BUFEDT
+;		lda	#<BUFEDT
+;		ldy	#>BUFEDT
 ;		lda	#$01
-;		initmainargs
+		initmainargs ,,1
 		sta	RES
 		sty	RES+1
 
@@ -246,7 +246,7 @@ XGETARGV = $2E
 		iny
 		bne	cmdline_loop
 
-;		mfree	(RES)
+		mfree	(RES)
 	@skip:
 
 		jsr	init_tables
