@@ -1,3 +1,7 @@
+2023.2
+ + Ajout instruction "on error..."
+ + Optimisation de la gestion du fichier script (suppression des ouverture/fermeture inutiles)
+
 2022.4
  + Ajout paramàtre pour exit: exit n (defaut: EOK)
  + Modification instruction if: if "string1" = "string2"

@@ -6,7 +6,7 @@ submit utility for Orix
 - src : Source files
 
 ## Informations (french)
-Version 2022.4
+Version 2023.2
 
 - Nécessite une version Orix v2022.4 ou supérieure.
 
