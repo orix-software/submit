@@ -37,6 +37,8 @@
 
 				string80	"DUMP"
 				string80	"ERRORLEVEL"
+
+				string80	"ON"
 				.byte	$00
 
 			cmnd_addr:
@@ -72,6 +74,8 @@
 
 				.word	cmnd_dump
 				.word	cmnd_errorlevel
+
+				.word	cmnd_on
 
 			internal_var_table:
 				string80	"EXIST"

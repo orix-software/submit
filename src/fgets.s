@@ -194,6 +194,7 @@ TEXTFILE = 1
 			jsr	fill_buffer
 			cpx	buffer_size
 			beq	eof
+			bcs	end
 
 		getc:
 			ldy	#$00
@@ -216,16 +217,26 @@ TEXTFILE = 1
 
 		fill_buffer:
 			; Le ch376 ne peut lire que 254 octets en une seule fois
+			jsr	submit_reopen
+			bcs	open_error
+
 			fread	buffer, #$fe, 1, fp
 			; cmp	#$fe
 			; bne	eof
 
 			sta	buffer_size
 
+			;ldx	#$00
+			;stx	buffer_pos
+
+			jsr	submit_close
+			;chdir	path
+
 			ldx	#$00
 			stx	buffer_pos
 
 			; clc
+		open_error:
 			rts
 
 		; eof:

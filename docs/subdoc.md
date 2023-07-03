@@ -10,7 +10,7 @@ l'exception des commandes internes suivantes:
 qui ne sont pas encore supportees.
 
 Les commandes **call**,**chain**,**choice**
-,**cls**,**getkey**,**goto**,**if**,
+,**cls**,**getkey**,**goto**,**if**,**on** **error**,
 **pause**,**restore**,**return**,**save** et **type** ont ete ajoutees.
 
 La commande **echo** est etendue par rapport a celle du shell.
@@ -278,6 +278,42 @@ Apres execution^D^Rerrorlevel^G^Pvaut:
 \
 \
 \
+# On error (1/2)
+\
+\
+La commande **on error** permet d'intercepter les erreurs d'execution
+qui normalement mettent fin au script.
+\
+La portee de **on error** s'etend jusqu'a l'execution de la prochaine instruction **on error**.
+\
+## Syntaxe:^P
+^Pon error^B[instruction]
+\
+## Parametre:^P
+- ^Binstruction^Gest l'instruction qui sera executee en cas d'erreur.
+Si^Binstruction^Gest absent, submit revient au comportemment par defaut et la prochaine erreur provoquera un arret du script.
+\
+# On error (2/2)
+\
+\
+### Exemples:^P
+\
+- 1. on error goto^Flabel1
+- 2. on error call^Fsubr1
+- 3. on error echo^B"Erreur $errorlevel"
+- 4. on error ^T; ignore^P
+- 5. on error
+\
+ 1) Saute au label^Flabel1.
+
+ 2) Execute la procedure^Fsubr1^Gpuis continue a la ligne suivant celle qui a provoque l'erreur.
+
+ 3) Affiche ^BErreur xx^Gpuis continue a la ligne suivant celle qui a provoque l'erreur.
+
+ 4) Ignore les erreurs.
+
+ 5) Revient au comportement par defaut.
+
 # Pause
 \
 \

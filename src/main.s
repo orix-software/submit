@@ -38,6 +38,9 @@ XGETARGV = $2E
 ; Pour compatibilité fichier TEXT
 .import fpos_text
 
+; From cmnd_on.s
+.import on_error
+
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
@@ -356,8 +359,8 @@ XGETARGV = $2E
 		dex
 		bpl	save_fpos
 
-		jsr	submit_reopen
-		bcs	open_error
+		;jsr	submit_reopen
+		;bcs	open_error
 
 		lda	#<line
 		ldy	#>line
@@ -367,7 +370,7 @@ XGETARGV = $2E
 ;		jsr	PrintRegs
 		bcs	end
 
-		jsr	submit_close
+		;jsr	submit_close
 		chdir	path
 ;		print	line
 ;		crlf
@@ -386,6 +389,7 @@ XGETARGV = $2E
 		beq	skip
 
 		; Premier caractère: '#' ou ';' -> commentaire
+	go:
 		lda	line,x
 		cmp	#'#'
 		beq	loop
@@ -442,6 +446,34 @@ XGETARGV = $2E
 		pha
 		stx	save_x
 
+		lda	on_error
+		beq	no_on_error
+
+		; Place le code erreur dans le poids faible de errorlevel
+		pla
+		sta	errorlevel
+
+		ldx	#$ff
+	on_error_loop:
+		inx
+		lda	on_error,x
+		sta	line,x
+		bne	on_error_loop
+
+		; Initialise l'offset dans la ligne
+		tax
+		; Place 0 dans le poids fort de errorlevel
+		sta	errorlevel+1
+
+		; Test CTRM+C au cas où
+		asl	KBDCTC
+		bcc	go
+
+		; Restaure le code erreur
+		lda	errorlevel
+		pha
+
+	no_on_error:
 		prints	"\r\nError line "
 		lda	linenum+1
 		jsr	PrintHexByte

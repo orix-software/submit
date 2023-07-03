@@ -17,23 +17,20 @@
 ;----------------------------------------------------------------------
 .include "macros/utils.mac"
 ;.include "macros/SDK-ext.mac"
+.include "submit.inc"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import fgets
-.import submit_line
+.import save_x
+
+.import skip_spaces, string_delim
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export cmnd_text
-
-;----------------------------------------------------------------------
-;			Defines / Constantes
-;----------------------------------------------------------------------
-; de main.s
-LINE_MAX_SIZE = 128
+.export cmnd_on
+.export on_error
 
 ;----------------------------------------------------------------------
 ;				Variables
@@ -41,96 +38,85 @@ LINE_MAX_SIZE = 128
 .pushseg
 	.segment "DATA"
 
-.popseg
+		unsigned char on_error[LINE_MAX_SIZE]
 
-;----------------------------------------------------------------------
-;			Chaines statiques
-;----------------------------------------------------------------------
-.pushseg
 	.segment "RODATA"
-		endtext:
-			string80 "ENDTEXT"
-			.byte $00
-.popseg
+		on_opts:
+			string80	"ERROR"
+			.byte	$00
 
-;----------------------------------------------------------------------
-;			Programme principal
-;----------------------------------------------------------------------
-.segment "CODE"
+;		on_ptrs:
+;			.word	on_error
+.popseg
 
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
 ;	X: offset sur le premier caractère suivant la commande
+;
 ; Sortie:
 ;
 ; Variables:
 ;	Modifiées:
 ;		-
 ;	Utilisées:
-;		line
-;		endtext
-;		submit_line
+;		-
 ; Sous-routines:
 ;	skip_spaces
-;	submit_reopen
-;	submit_close
-;	fgets
-;	submit
-;	find_cmnd
-;	XWSTR0
-;	crlf
 ;----------------------------------------------------------------------
-.proc cmnd_text
+.proc cmnd_on
 		jsr	skip_spaces
-		bne	error
+		; beq	error_enoent
+		beq	error2
 
-		;jsr	submit_reopen
-		;bcs	open_error
+		stx	save_x
 
-	loop:
-		lda	#<line
-		ldy	#>line
-		ldx	#LINE_MAX_SIZE
-
-		jsr	fgets
-		bcs	end
-
-		; Pour prendre en compte les caractères de contrôle et les
-		; paramètres.
-		lda	#<line
-		ldy	#>line
-		ldx	#$00
-		jsr	submit
-		; Erreur?
-		bcs	error
-
-		lda	#<endtext
-		ldy	#>endtext
-		ldx	#$00
+		lda	#<on_opts
+		ldy	#>on_opts
 		clc
 		jsr	find_cmnd
-		bcc	end
+		bcs	error
 
-		lda	#<submit_line
-		ldy	#>submit_line
-		.byte	$00, XWSTR0
-		crlf
-		jmp	loop
+		; Ici A = indice de l'optoon
+;		asl
+;		tay
+;		lda	on_ptrs,y
+;		sta	stxx+1
+;		lda	on_ptrs+1,y
+;		sta	stxx+2
 
-	end:
-		;jsr	submit_close
+		jsr	skip_spaces
+		beq	disable
+
+		dex
+		ldy	#$ff
+	loop:
+		iny
+		inx
+		lda	submit_line,x
+;	stxx:
+		sta	on_error,y
+		bne	loop
+
+		clc
 		rts
 
-
 	error:
-		; Erreur de syntaxe, TEXT doit être seul sur la ligne
-		lda	#$ff
+		ldx	save_x
+	error2:
+		lda	#ERANGE
+;		.byte	$2c
+;	error_enoent:
+;		lda	#ENOENT
+
 		sec
 		rts
 
-	open_error:
-		rts
+	disable:
+		lda	#$00
+		sta	on_error
 
+		clc
+		rts
 .endproc
 

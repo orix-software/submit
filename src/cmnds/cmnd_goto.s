@@ -178,7 +178,7 @@ LINE_MAX_SIZE = 128
 		lda	linenum+1
 		sta	save_linenum+1
 
-		jsr	submit_reopen
+;		jsr	submit_reopen
 
 		; Sauvegarde le label à trouver
 		jsr	store_label
@@ -202,7 +202,7 @@ LINE_MAX_SIZE = 128
 		bne	loop
 
 		; Récupère l'adresse de la ligne suivant le ':label'
-		jsr	ftell
+;		jsr	ftell
 
 		lda	#<line
 		ldy	#>line
@@ -217,7 +217,7 @@ LINE_MAX_SIZE = 128
 		; On a trouvé le label, inutile de continuer la recherche
 		;jsr	end
 		;jmp	cmnd_goto
-		jsr	submit_close
+;		jsr	submit_close
 		rts
 
 	eof:
@@ -234,7 +234,7 @@ LINE_MAX_SIZE = 128
 		;jmp	cmnd_goto
 
 	end:
-		jsr	submit_close
+;		jsr	submit_close
 
 		; Restaure la position dans le fichier
 		ldx	#$03
@@ -251,13 +251,13 @@ LINE_MAX_SIZE = 128
 		jsr	buffer_reset
 
 		; Recharge la ligne...
-		jsr	submit_reopen
+;		jsr	submit_reopen
 		lda	#<line
 		ldy	#>line
 		ldx	#LINE_MAX_SIZE
 		jsr	fgets
 		; bcs	error
-		jsr	submit_close
+;		jsr	submit_close
 		lda	#<line
 		ldy	#>line
 		ldx	#$00
