@@ -51,6 +51,9 @@
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
+; Pour submit_reopen / submit_close dans fgets
+.export f_restore
+
 .export cmnd_restore
 .export cmnd_save
 .export init_entry
@@ -68,6 +71,10 @@
 		unsigned short line_len
 		unsigned char num_buffer[10]
 		unsigned char ident_buffer[ident_len+1]
+
+		; Flag pour empecher submit_reopen / submit_close
+		; de ré-ouvrir le script pendant la lecture avec fgets
+		unsigned char f_restore
 .popseg
 
 ;----------------------------------------------------------------------
@@ -203,6 +210,11 @@
 		eor	fp+1
 		beq	error_open
 
+		; indique cmnd_restore en cours pour submit_reopen dans fgets
+		; (f_restore non nul)
+		sta	f_restore
+
+		; Initilaise les pointeurs de lecture
 		jsr	buffer_reset
 
 	getline:
@@ -304,6 +316,8 @@
 		; Set ERRORLEVEL = 0
 		sta	errorlevel
 		sta	errorlevel+1
+		; Signale la fin de cmnd_restore pour submit_reopen dans fgets
+		sta	f_restore
 		rts
 
 	error2:
@@ -373,6 +387,8 @@
 		sta	errorlevel
 		lda	#$00
 		sta	errorlevel+1
+		; Signale la fin de cmnd_restore pour submit_reopend ans fgets
+		sta	f_restore
 
 		fclose	(fp)
 

@@ -42,8 +42,8 @@
 ;			Defines / Constantes
 ;----------------------------------------------------------------------
 CASE_SENSITIVE_LABELS .set 0
-MAX_LABELS = 25
-LABEL_TABLE_SIZE = 128
+MAX_LABELS = 50
+LABEL_TABLE_SIZE = 255
 
 ;----------------------------------------------------------------------
 ;				Variables
@@ -147,7 +147,7 @@ LABEL_TABLE_SIZE = 128
 
 		inx
 		iny
-		cpy	#$80
+		cpy	#LABEL_TABLE_SIZE
 		bne	loop
 
 	ovfError:
@@ -313,15 +313,29 @@ LABEL_TABLE_SIZE = 128
 
 	end:
 		prints	"\r\nTable size: "
+		; Nombre d'octets occupés
 		lda	save_x
 		ldy	#$00
-		ldx	#$02
+		ldx	#$01
 		.byte	$00, XDECIM
 		cputc	'/'
 
 		lda	#LABEL_TABLE_SIZE
 		ldy	#$00
-		ldx	#$02
+		ldx	#$01
+		.byte	$00, XDECIM
+
+		; Nombre de labels
+		cputc	' '
+		lda	label_num
+		ldy	#$00
+		ldx	#$01
+		.byte	$00, XDECIM
+
+		cputc	'/'
+		lda	#MAX_LABELS
+		ldy	#$00
+		ldx	#$01
 		.byte	$00, XDECIM
 
 		crlf

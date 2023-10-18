@@ -23,7 +23,7 @@
 ;----------------------------------------------------------------------
 .importzp ptr
 
-.import save_a, save_y
+.import save_a
 .import submit_line
 .import forward_label, label_num, label_line
 .import label_offsets, labels
@@ -55,6 +55,8 @@ LINE_MAX_SIZE = 128
 
 		unsigned char save_label[20]
 		unsigned char save_linenum[2]
+
+		unsigned char save_x
 .popseg
 
 ;----------------------------------------------------------------------
@@ -71,7 +73,7 @@ LINE_MAX_SIZE = 128
 ;
 ; Variables:
 ;	Modifiées:
-;		save_y
+;		save_x
 ;		linenum
 ;		fpos
 ;		fpos_text
@@ -101,7 +103,7 @@ LINE_MAX_SIZE = 128
 		jsr	skip_spaces
 		beq	error
 
-		stx	save_y
+		stx	save_x
 
 		; Table des labels vide?
 		lda	label_num
@@ -122,7 +124,7 @@ LINE_MAX_SIZE = 128
 		lda	label_line,x
 		sta	linenum
 		lda	label_line+1,x
-		sta	linenum+1,x
+		sta	linenum+1
 		txa
 
 		; Récupère l'offset du label
@@ -270,7 +272,7 @@ LINE_MAX_SIZE = 128
 		sta	linenum+1
 
 		; Restaure l'offset dans la ligne
-		ldx	save_y
+		ldx	save_x
 
 		rts
 
@@ -293,13 +295,13 @@ LINE_MAX_SIZE = 128
 	;       Modifiées:
 	;		save_label
 	;       Utilisées:
-	;		save_y
+	;		save_x
 	;		submit_line
 	; Sous-routines:
 	;	-
 	;----------------------------------------------------------------------
 	.proc store_label
-			ldx	save_y
+			ldx	save_x
 			ldy	#$00
 		loop:
 			lda	submit_line,x

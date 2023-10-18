@@ -35,6 +35,10 @@
 ; Pour la gestion des variables
 ;.importzp var1, var2
 
+; Pour submit_reopen / submit_close dans fgets
+; Indique que cmnd_restore est en cours
+.import f_restore
+
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
@@ -288,8 +292,16 @@ CTRL_PREFIX = '^'
 ;	fclose
 ;----------------------------------------------------------------------
 .proc submit_close
+		; Si cmnd_restore en cours, ne pas ouvrir le script
+		lda	f_restore
+		bne	end_restore
+
 		jsr	ftell
 		fclose	(fp)
+		rts
+
+	end_restore:
+		clc
 		rts
 .endproc
 
@@ -313,6 +325,10 @@ CTRL_PREFIX = '^'
 ;	crlf
 ;----------------------------------------------------------------------
 .proc submit_reopen
+		; Si cmnd_restore en cours, ne pas ouvrir le script
+		lda	f_restore
+		bne	end_restore
+
 		; TODO: sauvegarder le pwd actuel pour pouvoir le restaurer
 		; après la réouverture du fichier au cas où on a exécuté un cd
 
@@ -337,6 +353,7 @@ CTRL_PREFIX = '^'
 	seek:
 		jsr	fseek
 
+	end_restore:
 		clc
 		lda	#EOK
 		rts

@@ -1,4 +1,19 @@
-2023.2
+2023.3 - 1.3
+ + Correction bug dans affectation.s, la modification d'une variable allouait
+   systématiquement un nouveau tampon au lieu de réutiliser l'actuel
+ + Correction bug dans cmnd_restore: ouvrait le script à la place du fichier
+   de données (ajout d'un flag f_restore)
+ + Correction bug dans cmnd_goto, ne récupérait pas correctement le n° de ligne
+   d'un label destination
+ + Supression du test is_dir dans if_exist (à vérifier en réel)
+ + Correction bug affichage de la ligne en cas d'erreur lors d'une affectation
+ + Correction bug affichage de la ligne en cas d'erreur lors d'un if...
+ + Correction mfree() non exécuté après copie de la ligne de commande
+ + Ajout message d'erreur si la ligne de commande pour XEXEC est trop longue
+   (code EINVAL renvoyée par le Kernel v2023.3)
+ + Augmentation de la taille de la table des labels (256 octets / 50 labels)
+
+2023.2 - 1.2
  + Ajout instruction "on error..."
  + Optimisation de la gestion du fichier script (suppression des ouverture/fermeture inutiles)
 

@@ -249,8 +249,8 @@ XGETARGV = $2E
 		iny
 		bne	cmdline_loop
 
-		mfree	(RES)
 	@skip:
+		mfree	(RES)
 
 		jsr	init_tables
 
@@ -490,8 +490,14 @@ XGETARGV = $2E
 
 	error_noexec:
 		cmp	#ENOEXEC
-		bne	error_other
+		bne	error_einval
 		prints	" exec format error"
+		jmp	error_line
+
+	error_einval:
+		cmp	#EINVAL
+		bne	error_other
+		prints	" line too long"
 		jmp	error_line
 
 	error_other:

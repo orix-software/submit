@@ -341,9 +341,11 @@ XOPENDIR = $2f
 		sta	var2
 		sta	var2+1
 
+		; Sauvegarde X en cas d'erreur
+		stx	save_x
 		; Recherche la variable
 		jsr	find_var
-		bcs	error
+		bcs	error_x
 
 		; A: indice de la variable interne
 		; (EXIST = pseudo variable 0)
@@ -359,6 +361,11 @@ XOPENDIR = $2f
 		beq	found
 		clc
 		rts
+
+	error_x:
+		; Restaure X, sinon on indique une erreur à la fin du nom
+		; de la variable et non au début
+		ldx	save_x
 
 	error:
 		sec
@@ -587,11 +594,11 @@ XOPENDIR = $2f
 		ldy	#>line
 
 ; TEMPORAIRE - TESTS
-		jsr	is_dir
-		beq	is_file
-		lda	#$00
-		php
-		beq	set_error
+;		jsr	is_dir
+;		beq	is_file
+;		lda	#$00
+;		php
+;		beq	set_error
 
 	is_file:
 		; Supprime le "/*" placé à la fin du nom de fichier par opendir
@@ -719,6 +726,11 @@ XOPENDIR = $2f
 		sta	var1
 		sty	var1+1
 
+		; Remet le '"' à la fin de la chaîne (pour affichage de la ligne
+		; en cas d'erreur)
+		lda	#'"'
+		sta	submit_line,x
+
 		; Calcul de la longueur de la chaine
 		sec
 		txa
@@ -761,6 +773,11 @@ XOPENDIR = $2f
 		jsr	string_delim
 		; Sauvegarde poids faible de string2
 		sta	var2
+
+		; Remet le '"' à la fin de la chaîne (pour affichage de la ligne
+		; en cas d'erreur)
+		lda	#'"'
+		sta	submit_line,x
 
 		; Ajuste X pour pointer après string2
 		inx

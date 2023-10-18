@@ -127,57 +127,57 @@
 
 	_equal:
 		cmp	#'='
-		bne	error2
+		beq	store
 
-		inx
-
-		jsr	skip_spaces
+;		inx
+;
+;		jsr	skip_spaces
 
 		; Nombre maximal de variables atteint?
-		lda	vars_index
-		cmp	#VARS_MAX
-		bcs	error4
+;		lda	vars_index
+;		cmp	#VARS_MAX
+;		bcs	error4
 
 		; Update value
-		lda	#'C'
-		sta	entry+st_entry::type
-		lda	vars_data_index
-		sta	entry+st_entry::data_ptr
-		sta	ptr
-		lda	vars_data_index+1
-		sta	entry+st_entry::data_ptr+1
-		sta	ptr+1
+;		lda	#'C'
+;		sta	entry+st_entry::type
+;		lda	vars_data_index
+;		sta	entry+st_entry::data_ptr
+;		sta	ptr
+;		lda	vars_data_index+1
+;		sta	entry+st_entry::data_ptr+1
+;		sta	ptr+1
 
-		; Délimiteur
-		lda	#$00
-		sta	save_a
-
-		lda	submit_line,x
-		cmp	#'"'
-		beq	set_delim
-		cmp	#'''
-		bne	get_val
-	set_delim:
-		sta	save_a
-		inx
-
-	get_val:
-		ldy	#$00
-
-	loop3:
-		lda	submit_line,x
-		sta	(ptr),y
-
-		beq	eov
-		cmp	save_a
-		beq	eov
-
-		cpy	#VARS_DATALEN
-		beq	error5
-
-		inx
-		iny
-		jmp	loop3
+;		; Délimiteur
+;		lda	#$00
+;		sta	save_a
+;
+;		lda	submit_line,x
+;		cmp	#'"'
+;		beq	set_delim
+;		cmp	#'''
+;		bne	get_val
+;	set_delim:
+;		sta	save_a
+;		inx
+;
+;	get_val:
+;		ldy	#$00
+;
+;	loop3:
+;		lda	submit_line,x
+;		sta	(ptr),y
+;
+;		beq	eov
+;		cmp	save_a
+;		beq	eov
+;
+;		cpy	#VARS_DATALEN
+;		beq	error5
+;
+;		inx
+;		iny
+;		jmp	loop3
 
 	error2:
 		; Set ERRORLEVEL = 2 (caractère '=' non trouvé ou
@@ -185,42 +185,6 @@
 		ldx	save_x
 		lda	#ENOENT
 		sec
-		rts
-
-	error3:
-		; Set ERRORLEVEL = 3 (nom de variable trop long)
-		lda	#$03
-		bne	set_errorlevel
-
-	eov:
-		; Ajoute \00 à la fin de la chaine
-		lda	#$00
-		sta	(ptr),y
-
-		sty	entry+st_entry::len
-		; On vérifie qu'on n'essaye pas d'écraser une variable système
-		jsr	var_search
-		bne	add_var
-
-		; 3 = nombre de variables réservées
-		cmp	#$03
-		bcc	error3
-
-	add_var:
-		jsr	var_new
-		bne	error6
-
-		inc	vars_index
-
-		clc
-		lda	#VARS_DATALEN
-		adc	vars_data_index
-		sta	vars_data_index
-		lda	#$00
-		adc	vars_data_index+1
-		sta	vars_data_index+1
-
-		clc
 		rts
 
 	error6:
@@ -250,5 +214,139 @@
 	error:
 		sec
 		rts
+
+	error3:
+		; Set ERRORLEVEL = 3 (nom de variable trop long)
+		lda	#$03
+		bne	set_errorlevel
+
+;	eov:
+;		; Ajoute \00 à la fin de la chaine
+;		lda	#$00
+;		sta	(ptr),y
+;
+;		sty	entry+st_entry::len
+		; On vérifie qu'on n'essaye pas d'écraser une variable système
+	store:
+		jsr	var_search
+		bne	add_var
+
+		; 3 = nombre de variables réservées
+		cmp	#$03
+		bcc	error3
+
+		jsr	var_getvalue
+		beq	found
+
+	add_var:
+		; Nombre maximal de variables atteint?
+		lda	vars_index
+		cmp	#VARS_MAX
+		bcs	error4
+
+		; On met à jour le type...
+		lda	#'C'
+		sta	entry+st_entry::type
+
+		; ... et data_ptr
+		lda	vars_data_index
+		sta	entry+st_entry::data_ptr
+		lda	vars_data_index+1
+		sta	entry+st_entry::data_ptr+1
+
+		; Mise à jour des pointeurs
+		inc	vars_index
+
+		clc
+		lda	#VARS_DATALEN
+		adc	vars_data_index
+		sta	vars_data_index
+		lda	#$00
+		adc	vars_data_index+1
+		sta	vars_data_index+1
+
+	found:
+		lda	entry+st_entry::data_ptr
+		sta	ptr
+		lda	entry+st_entry::data_ptr+1
+		sta	ptr+1
+
+	update_var:
+		; Délimiteur
+		lda	#$00
+		sta	save_a
+
+		inx
+
+		jsr	skip_spaces
+
+		lda	submit_line,x
+		cmp	#'"'
+		beq	set_delim
+		cmp	#'''
+		bne	get_val
+	set_delim:
+		sta	save_a
+		inx
+
+	get_val:
+		ldy	#$00
+
+	loop3:
+		lda	submit_line,x
+		sta	(ptr),y
+
+		beq	eov
+		cmp	save_a
+		beq	eov
+
+		cpy	#VARS_DATALEN
+		beq	error5
+
+		inx
+		iny
+		jmp	loop3
+
+	eov:
+		; Ajoute \00 à la fin de la chaine
+		lda	#$00
+		sta	(ptr),y
+
+		sty	entry+st_entry::len
+
+		jsr	var_new
+		beq	end
+		jmp	error6
+	end:
+		clc
+		rts
+
+;	error6:
+;		; Set ERRORLEVEL = 6 (pb ajout variable dans la table)
+;		lda	#$06
+;		bne	set_errorlevel
+;
+;	error4:
+;		; Set ERRORLEVEL = 4 (nombre maximal de variables atteint)
+;		; TODO: Remonter une erreur fatale?
+;		lda	#$04
+;		bne	set_errorlevel
+;
+;	error5:
+;		; Set ERRORLEVEL = 5 (chaine trop longue)
+;		lda	#$05
+;
+;	set_errorlevel:
+;		sta	errorlevel
+;		lda	#$00
+;		sta	errorlevel+1
+;
+;		;ldx	save_x
+;		;clc
+;		;rts
+;
+;	error:
+;		sec
+;		rts
 .endproc
 
