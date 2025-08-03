@@ -26,29 +26,29 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-;.importzp ptr
+; From variables.s
+.import keylen
+.import var_new
+.import var_getvalue
+.import var_search
 
+; From internal_cmmnd.s
 .import save_a, save_x, save_y
+
+; From submit.s
 .import submit_line
-.import error_level
 
+; From internal_cmnd.s
 .import skip_spaces
-.import line
 
-; From cmnd_call
-;.import push
-;.import pop
-
-; From fgets
-;.import buffer_reset
-
-.importzp object
-
+; From main.s
 .import vars_index
 .import vars_data_index
+.import errorlevel
+.import entry
 
+; From cmnd_restore.s
 .import init_entry
-.import keylen
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -129,56 +129,6 @@
 		cmp	#'='
 		beq	store
 
-;		inx
-;
-;		jsr	skip_spaces
-
-		; Nombre maximal de variables atteint?
-;		lda	vars_index
-;		cmp	#VARS_MAX
-;		bcs	error4
-
-		; Update value
-;		lda	#'C'
-;		sta	entry+st_entry::type
-;		lda	vars_data_index
-;		sta	entry+st_entry::data_ptr
-;		sta	ptr
-;		lda	vars_data_index+1
-;		sta	entry+st_entry::data_ptr+1
-;		sta	ptr+1
-
-;		; Délimiteur
-;		lda	#$00
-;		sta	save_a
-;
-;		lda	submit_line,x
-;		cmp	#'"'
-;		beq	set_delim
-;		cmp	#'''
-;		bne	get_val
-;	set_delim:
-;		sta	save_a
-;		inx
-;
-;	get_val:
-;		ldy	#$00
-;
-;	loop3:
-;		lda	submit_line,x
-;		sta	(ptr),y
-;
-;		beq	eov
-;		cmp	save_a
-;		beq	eov
-;
-;		cpy	#VARS_DATALEN
-;		beq	error5
-;
-;		inx
-;		iny
-;		jmp	loop3
-
 	error2:
 		; Set ERRORLEVEL = 2 (caractère '=' non trouvé ou
 		; caractère incorrecte dans le nom de la variable)
@@ -220,12 +170,6 @@
 		lda	#$03
 		bne	set_errorlevel
 
-;	eov:
-;		; Ajoute \00 à la fin de la chaine
-;		lda	#$00
-;		sta	(ptr),y
-;
-;		sty	entry+st_entry::len
 		; On vérifie qu'on n'essaye pas d'écraser une variable système
 	store:
 		jsr	var_search
@@ -320,33 +264,5 @@
 	end:
 		clc
 		rts
-
-;	error6:
-;		; Set ERRORLEVEL = 6 (pb ajout variable dans la table)
-;		lda	#$06
-;		bne	set_errorlevel
-;
-;	error4:
-;		; Set ERRORLEVEL = 4 (nombre maximal de variables atteint)
-;		; TODO: Remonter une erreur fatale?
-;		lda	#$04
-;		bne	set_errorlevel
-;
-;	error5:
-;		; Set ERRORLEVEL = 5 (chaine trop longue)
-;		lda	#$05
-;
-;	set_errorlevel:
-;		sta	errorlevel
-;		lda	#$00
-;		sta	errorlevel+1
-;
-;		;ldx	save_x
-;		;clc
-;		;rts
-;
-;	error:
-;		sec
-;		rts
 .endproc
 

@@ -21,12 +21,11 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-;.import PrintRegs
-
-;.import submit_close
-;.import submit_reopen
-
+; From submit.s
 .import submit_line
+
+; From main.s
+.import errorlevel
 
 ;----------------------------------------------------------------------
 ;				exports

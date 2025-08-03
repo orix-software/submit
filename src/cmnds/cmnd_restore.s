@@ -17,7 +17,6 @@
 ;			include application
 ;----------------------------------------------------------------------
 .include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 .include "../include/submit.inc"
 
 ;----------------------------------------------------------------------
@@ -27,26 +26,39 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-;.importzp ptr
+; From main.s
+.import entry
+.import vars_data_index
+.import vars_index
+.import errorlevel
 
-.import save_a, save_x, save_y
+; From utils.s
+.import xbindx
+
+; From submit.s
 .import submit_line
-.import error_level
 
-.import skip_spaces
+; From internal_cmnd.s
+.import save_x
 .import line
+.import find_cmnd
+.import skip_spaces
 
 ; From cmnd_call
 .import push
 .import pop
 
 ; From fgets
+.import fgets
 .import buffer_reset
 
+;From variables.s
 .importzp object
-
-.import vars_index
-.import vars_data_index
+.import keylen
+.import var_new
+.import var_search
+.import var_list
+.import var_set_callback
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -98,6 +110,7 @@
 ;			Programme principal
 ;----------------------------------------------------------------------
 .segment "CODE"
+TEST_REST = 1
 
 ;----------------------------------------------------------------------
 ;
@@ -132,6 +145,7 @@
 ;	fgets
 ;	fclose
 ;----------------------------------------------------------------------
+.ifndef TEST_REST
 .proc cmnd_restore
 		jsr	skip_spaces
 		bne	cont
@@ -396,6 +410,133 @@
 		ldx	save_x
 		rts
 .endproc
+.else
+.import affectation
+.proc cmnd_restore
+		jsr	skip_spaces
+		bne	cont
+
+	no_filename:
+	no_from:
+	error:
+		; Erreur de syntaxe
+		lda	#$ff
+		sec
+		rts
+
+	error_open:
+		; À voir si on se contente de modifier ERRORLEVEL
+		; ou si il faut remonter une erreur au niveau de submit
+		; Modifier aussi la variable EXIST?
+
+		; Erreur ouverture de fichier
+		; Set ERRORLEVEL = 1
+		lda	#$01
+		sta	errorlevel
+		lda	#$00
+		sta	errorlevel+1
+		clc
+
+		;ldx	save_x
+		;lda	#$fe
+		;sec
+		rts
+
+	error_push:
+		rts
+
+	cont:
+		lda	#<from
+		ldy	#>from
+		clc
+		jsr	find_cmnd
+		bcs	no_from
+
+		jsr	skip_spaces
+		stx	save_x
+		beq	no_filename
+
+		ldy	#$00
+	loop:
+		lda	submit_line,x
+		sta	filename,y
+
+		beq	restore
+		; TODO: Vérifier la validité des caractères
+		cmp	#' '
+		beq	restore
+
+		inx
+		iny
+		cpy	#64
+		bne	loop
+
+	oom:
+		; Label trop long
+		sec
+		lda	#$f3
+		rts
+
+	restore:
+		lda	#$00
+		sta	filename,y
+
+		jsr	push
+		bcs	error_push
+
+		fopen	filename, O_RDONLY
+		sta	fp
+		stx	fp+1
+		eor	fp+1
+		beq	error_open
+
+		; indique cmnd_restore en cours pour submit_reopen dans fgets
+		; (f_restore non nul)
+		sta	f_restore
+
+		; Initilaise les pointeurs de lecture
+		jsr	buffer_reset
+
+	getline:
+		lda	#<submit_line
+		ldy	#>submit_line
+		ldx	LINE_MAX_SIZE
+		jsr	fgets
+
+		; Fin de fichier?
+		bcs	eof
+
+		; Ligne vide?
+		beq	getline
+
+		ldx	#$00
+		jsr	skip_spaces
+		beq	getline
+
+		lda	submit_line, x
+		cmp	#';'
+		beq	getline
+
+		cmp	#'#'
+		beq	getline
+
+		jsr	affectation
+		bcc	getline
+
+		rts
+
+	eof:
+		fclose	(fp)
+		jsr	pop
+		lda	#$00
+		; Set ERRORLEVEL = 0
+		sta	errorlevel
+		sta	errorlevel+1
+		; Signale la fin de cmnd_restore pour submit_reopen dans fgets
+		sta	f_restore
+		rts
+.endproc
+.endif
 
 ;----------------------------------------------------------------------
 ;
@@ -686,6 +827,7 @@
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
+.ifndef TEST_REST
 .proc _skip_spaces
 	loop:
 		inx
@@ -695,7 +837,7 @@
 
 		rts
 .endproc
-
+.endif
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
@@ -732,3 +874,4 @@
 
 		rts
 .endproc
+

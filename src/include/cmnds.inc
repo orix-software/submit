@@ -1,5 +1,49 @@
 .ifndef CMNDS_INC
 	;----------------------------------------------------------------------
+	;				imports
+	;----------------------------------------------------------------------
+	.import	cmnd_at
+	; .import	cmnd_call
+	.import	cmnd_cd
+	.import	cmnd_choice
+	.import	cmnd_cls
+	.import	cmnd_echo
+	; .import	cmnd_exist
+	.import	cmnd_exit
+	.import	cmnd_goto
+	.import cmnd_iif
+	.import	cmnd_if
+	.import	cmnd_else
+	.import	cmnd_endif
+	; .import	cmnd_more
+	.import	cmnd_pause
+	.import	cmnd_pwd
+	.import	cmnd_rem
+	; .import	cmnd_test
+	.import	cmnd_type
+
+	.import	cmnd_getkey
+
+	.import	cmnd_call
+	.import	cmnd_return
+	.import	cmnd_chain
+
+	.import	cmnd_text
+
+	.import	cmnd_restore
+	.import	cmnd_save
+
+	.import	cmnd_input
+
+	.import	cmnd_dump
+	; Routine dans internal_cmnd.s
+	; .import	cmnd_errorlevel
+
+	.import	cmnd_on
+
+	.import	cmnd_exec
+
+	;----------------------------------------------------------------------
 	;			Chaines statiques
 	;----------------------------------------------------------------------
 	.pushseg
@@ -14,7 +58,10 @@
 				; string80	"EXIST"
 				string80	"EXIT"
 				string80	"GOTO"
+				string80	"IIF"
 				string80	"IF"
+				string80	"ELSE"
+				string80	"ENDIF"
 				; string80	"MORE"
 				string80	"PAUSE"
 				string80	"PWD"
@@ -39,6 +86,8 @@
 				string80	"ERRORLEVEL"
 
 				string80	"ON"
+
+				string80	"EXEC"
 				.byte	$00
 
 			cmnd_addr:
@@ -51,7 +100,10 @@
 				; .word	cmnd_exist
 				.word	cmnd_exit
 				.word	cmnd_goto
+				.word	cmnd_iif
 				.word	cmnd_if
+				.word	cmnd_else
+				.word	cmnd_endif
 				; .word	cmnd_more
 				.word	cmnd_pause
 				.word	cmnd_pwd
@@ -76,6 +128,8 @@
 				.word	cmnd_errorlevel
 
 				.word	cmnd_on
+
+				.word	cmnd_exec
 
 			internal_var_table:
 				string80	"EXIST"

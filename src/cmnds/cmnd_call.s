@@ -21,10 +21,15 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From main.s
 .import fpos
+
+; From fgets.s
+.import buffer_reset
+.import fpos_text
 .import linenum
 
-.import buffer_reset
+; From cmnd_goto.s
 .import cmnd_goto
 
 ;----------------------------------------------------------------------
@@ -137,15 +142,10 @@ typedef .struct stack_item
 
 		; Sauvegarde le numéro de la ligne suivant le call
 		; (utile uniquement pour les messages d'erreurs)
-;		sed
-;		clc
 		lda	linenum
-;		adc	#$01
 		sta	stack,y
 		lda	linenum+1
-;		adc	#$00
 		sta	stack+1,y
-;		cld
 
 		; Sauvegarde l'offset de la ligne suivant le call
 		lda	fpos_text

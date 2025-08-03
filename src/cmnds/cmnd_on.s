@@ -16,15 +16,18 @@
 ;			include application
 ;----------------------------------------------------------------------
 .include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 .include "submit.inc"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import save_x
+; From submit.s
+.import submit_line
 
-.import skip_spaces, string_delim
+; From internal_cmnd.s
+.import save_x
+.import find_cmnd
+.import skip_spaces
 
 ;----------------------------------------------------------------------
 ;				exports

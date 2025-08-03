@@ -20,7 +20,15 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From submit.s
+.import submit_close
+.import submit_reopen
+
+; From main.s
 .import fp
+
+; From debug.s
+.import PrintHexByte
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -98,6 +106,9 @@ TEXTFILE = 1
 			sty	address+1
 			stx	max_line_size
 
+			jsr	fgetc
+			bcs	eof
+
 			; Incrémeente le numéro de ligne
 			;php
 			sed
@@ -110,16 +121,19 @@ TEXTFILE = 1
 			sta	linenum+1
 			cld
 			;plp
+			jmp	skip
 
 		loop:
 			; fread	(address), #1, 1, fp
 			; cmp	#$01
 			; bne	eof
 			jsr	fgetc
-			bcs	eof
-
-			; En principe on ne peut pas avoir de caractère $00 dans un fichier texte
 			ldy	#$00
+			bcs	end
+
+		skip:
+			; En principe on ne peut pas avoir de caractère $00 dans un fichier texte
+			; ldy	#$00
 			lda	(address),y
 			beq	end
 

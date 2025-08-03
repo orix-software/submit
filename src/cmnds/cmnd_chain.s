@@ -27,26 +27,31 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-;.importzp ptr
+; From cmnd_label.s
+.import forward_label, label_num
+.import label_ofs
+.import labels
 
-.import save_a, save_x, save_y
-.import submit_line
-.import error_level
-
-.import skip_spaces
-.import line
-
-; From cmnd_call
-.import push
-.import pop
-
-; From fgets
+; From fgets.s
+.import fpos_text
+.import linenum
 .import buffer_reset
 
-.importzp object
+; From main.s
+.import fpos
+.import prev_fpos
+.import cmdline
+.import errorlevel
 
-.import vars_index
-.import vars_data_index
+; From internal_cmnd.s
+.import save_x
+.import skip_spaces
+
+; From cmnd_call
+.import stack_ptr
+
+; From submit.s
+.import submit_line
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -64,9 +69,6 @@
 		dummy: .byte "xx "
 		unsigned char filename[64]
 		unsigned short fp
-;		unsigned short line_len
-;		unsigned char num_buffer[10]
-;		unsigned char ident_buffer[ident_len+1]
 .popseg
 
 ;----------------------------------------------------------------------

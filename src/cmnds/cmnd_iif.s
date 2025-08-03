@@ -1,10 +1,11 @@
+.feature string_escapes
+
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
-.feature string_escapes
-
 .include "telestrat.inc"
 .include "errno.inc"
+.include "fcntl.inc"
 
 ;----------------------------------------------------------------------
 ;			includes SDK
@@ -15,50 +16,32 @@
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-.include "macros/utils.mac"
+.include "submit.inc"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-; From fgets.s
-.import fgets
-
-; From submit.s
-.import submit_line
-.import submit
+; From get_cond_expr.s
+.import get_cond_expr
 
 ; From internal_cmnd.s
-.import line
-.import find_cmnd
+.import internal_command
 .import skip_spaces
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export cmnd_text
-
-;----------------------------------------------------------------------
-;			Defines / Constantes
-;----------------------------------------------------------------------
-; de main.s
-LINE_MAX_SIZE = 128
+.export cmnd_iif
 
 ;----------------------------------------------------------------------
 ;				Variables
 ;----------------------------------------------------------------------
 .pushseg
 	.segment "DATA"
-
-.popseg
-
-;----------------------------------------------------------------------
-;			Chaines statiques
-;----------------------------------------------------------------------
-.pushseg
-	.segment "RODATA"
-		endtext:
-			string80 "ENDTEXT"
-			.byte $00
+		; <: 60 -> 1 => b6
+		; =: 61 -> 2 => b7
+		; >: 62 -> 3 => b7+b6
+		; unsigned char cmp_op
 .popseg
 
 ;----------------------------------------------------------------------
@@ -70,76 +53,34 @@ LINE_MAX_SIZE = 128
 ;
 ; Entrée:
 ;	X: offset sur le premier caractère suivant la commande
+;
 ; Sortie:
+;	C: 0-> Ok, 1-> Erreur
 ;
 ; Variables:
 ;	Modifiées:
 ;		-
 ;	Utilisées:
-;		line
-;		endtext
-;		submit_line
+;		-
 ; Sous-routines:
+;	get_logical_expr
 ;	skip_spaces
-;	submit_reopen
-;	submit_close
-;	fgets
-;	submit
-;	find_cmnd
-;	print
-;	crlf
+;	internal_command
 ;----------------------------------------------------------------------
-.proc cmnd_text
+.proc cmnd_iif
+		jsr	get_cond_expr
+		bcs	error_A
+
+		beq	false
+	true:
+		pla
+		pla
 		jsr	skip_spaces
-		bne	error
+		jmp	internal_command
 
-		;jsr	submit_reopen
-		;bcs	open_error
+	false:
 
-	loop:
-		lda	#<line
-		ldy	#>line
-		ldx	#LINE_MAX_SIZE
-
-		jsr	fgets
-		bcs	end
-
-		; Pour prendre en compte les caractères de contrôle et les
-		; paramètres.
-		lda	#<line
-		ldy	#>line
-		ldx	#$00
-		jsr	submit
-		; Erreur?
-		bcs	error
-
-		lda	#<endtext
-		ldy	#>endtext
-		; Si ENDTEXT doit être uniquement en début de ligne
-		; [
-		; ldx	#$00
-		; ]
-		clc
-		jsr	find_cmnd
-		bcc	end
-
-		print	submit_line
-		crlf
-		jmp	loop
-
-	end:
-		;jsr	submit_close
-		rts
-
-
-	error:
-		; Erreur de syntaxe, TEXT doit être seul sur la ligne
-		lda	#$ff
-		sec
-		rts
-
-	open_error:
+	error_A:
 		rts
 
 .endproc
-

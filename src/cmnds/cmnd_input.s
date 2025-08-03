@@ -15,26 +15,39 @@
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-;.include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 .include "../include/submit.inc"
 .include "macros/readline.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import skip_spaces
-;.import string_delim
+; From submit.s
+.import submit_line
 
+; From main.s
+.import errorlevel
+.import vars_data_index
+.import vars_index
+.import entry
+
+; From variables.s
+.import keylen
+.import var_new
+
+; From cmnd_restore.s
+.import init_entry
+
+; From internal_cmnd.s
+.importzp var1
+.import save_a, save_y
+.import skip_spaces
+
+; From sopt.S
 .import spar1
 	spar := spar1
-.importzp var1
 
-.importzp object
-
-.import vars_index
-.import vars_data_index
-.import keylen
+; From readline.lib
+.import readline
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -114,10 +127,7 @@
 		jsr	get_string_delim
 		stx	save_x
 
-		lda	#<prompt
-		ldy	#>prompt
-
-		.byte	$00, XWSTR0
+		print	prompt
 
 		ldx	save_x
 
@@ -384,23 +394,5 @@
 ;		lda	exec_address
 		tya
 		rts
-.endproc
-
-;----------------------------------------------------------------------
-;
-; Entrée:
-;	X: offset sur le premier caractère suivant la commande
-;
-; Sortie:
-;
-; Variables:
-;	Modifiées:
-;		-
-;	Utilisées:
-;		-
-; Sous-routines:
-;	-
-;----------------------------------------------------------------------
-.proc get_int
 .endproc
 

@@ -24,12 +24,16 @@ XOPENDIR = $2f
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.import save_x
-.import submit_line
+; From main.s
 .import path
-;.import path_len
 
+; From internal_cmnd.s
+.import save_x
+.import exec_address
 .import skip_spaces
+
+; From submit.s
+.import submit_line
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -68,9 +72,6 @@ XOPENDIR = $2f
 		sta	exec_address
 		stx	save_x
 		sty	exec_address+1
-
-		; Ferme le fichier .sub
-		;jsr	submit_close
 
 		; opendir()
 		lda	exec_address
@@ -148,6 +149,8 @@ XOPENDIR = $2f
 
 			; et le remplace par un $00
 			lda	#$00
+			dex
+			dey
 			sta	path,y
 			sta	submit_line,x
 			; sty	path_len

@@ -9,12 +9,20 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From sopt.s
 .import spar1
 	spar := spar1
 
-.import save_a
+; From main.s
 .import errorlevel
+
+; From internal_cmnd.s
 .importzp var1
+.import save_a, save_x
+.import skip_spaces
+
+; From submit.s
+.import submit_line
 
 ;----------------------------------------------------------------------
 ;				exports

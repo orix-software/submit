@@ -15,22 +15,33 @@
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-;.include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-.importzp ptr
+; From main.s
+.import prev_fpos
+.import fpos
 
+;From internal_cmnd.s
 .import save_a
-.import submit_line
-.import forward_label, label_num, label_line
-.import label_offsets, labels
 .import line
+.import skip_spaces
+.import find_cmnd
 
-.import skip_spaces, find_cmnd
+; From fgets.s
+.import fpos_text
+.import linenum
+.import fgets
+.import buffer_reset
 
+; From submit.s
+.import submit_line
+.import submit
+
+; From cmnd_label.s
+.import label_offsets, labels
+.import forward_label, label_num, label_line
 .import cmnd_label
 
 ;----------------------------------------------------------------------
@@ -112,9 +123,11 @@ LINE_MAX_SIZE = 128
 		; Cherche dans la table des labels
 		lda	#<labels
 		ldy	#>labels
-.if ::CASE_SENSITIVE_LABELS
+
+	.if ::CASE_SENSITIVE_LABELS
 		sec
-.endif
+	.endif
+
 		jsr	find_cmnd
 		bcs	not_found
 
@@ -236,8 +249,6 @@ LINE_MAX_SIZE = 128
 		;jmp	cmnd_goto
 
 	end:
-;		jsr	submit_close
-
 		; Restaure la position dans le fichier
 		ldx	#$03
 	restore_fpos:
@@ -253,13 +264,11 @@ LINE_MAX_SIZE = 128
 		jsr	buffer_reset
 
 		; Recharge la ligne...
-;		jsr	submit_reopen
 		lda	#<line
 		ldy	#>line
 		ldx	#LINE_MAX_SIZE
 		jsr	fgets
 		; bcs	error
-;		jsr	submit_close
 		lda	#<line
 		ldy	#>line
 		ldx	#$00
@@ -356,13 +365,12 @@ LINE_MAX_SIZE = 128
 			lda	#<labels
 			ldy	#>labels
 
-	.if ::CASE_SENSITIVE_LABELS
+		.if ::CASE_SENSITIVE_LABELS
 			sec
-	.endif
+		.endif
 			jsr	find_cmnd
 			rts
 
 	.endproc
 .endproc
-
 

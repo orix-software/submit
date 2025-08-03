@@ -1,14 +1,16 @@
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
-.feature string_escapes
+.feature string_escapes, loose_char_term
 
 .include "telestrat.inc"
 .include "errno.inc"
 .include "fcntl.inc"
 
-XMAINARGS = $2C
-XGETARGV = $2E
+.ifndef XMAINARGS
+	XMAINARGS = $2C
+	XGETARGV = $2E
+.endif
 
 ;----------------------------------------------------------------------
 ;			includes SDK
@@ -25,21 +27,50 @@ XGETARGV = $2E
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From debug.s
 .import PrintHexByte
 
-.import fgets
+; From fgets.s
 .import linenum
+.import fpos_text
+.import fgets
 
+; From cmnd_labem
 .import label_ofs, label_num, forward_label
 
+; From cmnd_call.s
 ; Pointeur de pile CALL/RETURN
 .import stack_ptr
 
-; Pour compatibilité fichier TEXT
-.import fpos_text
-
 ; From cmnd_on.s
 .import on_error
+
+; From variables.s
+.import keydup
+.import keylen
+.import entlen
+.import tabase
+
+; From submit.s
+.import submit_line
+.import submit
+
+; From external_command.s
+.import external_command
+
+; From internal_command.s
+.import internal_command
+
+; From cmnd_version.s
+.import cmnd_version
+
+; from scan.s
+.import scan
+
+; From args.s
+.import _get_argv
+.import _init_argv
+
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -227,7 +258,7 @@ XGETARGV = $2E
 
 	start:
 		; initmainargs semble poser un problème avec EXEC
-		; c'est à priori lié au malloc fait par inimainargs
+		; c'est à priori lié au malloc fait par initmainargs
 ;		initmainargs _argv
 ;		stx	_argc
 ;		dex
@@ -312,31 +343,18 @@ XGETARGV = $2E
 		sta	filename
 		sty	filename+1
 ; ]
-
-;		fopen	(filename), O_RDONLY
-;		sta	fp
-;		stx	fp+1
-;		eor	fp+1
-;		beq	open_error
-;		jsr	submit_reopen
-;		cmp	#EOK
-;		beq	loop
+		; Scan du script pour les blocs IF/ELSE/ENDIF
+		jsr	scan
+		bcs	end_errA
 
 	loop:
-		;jsr	StopOrCont
-;		.byte	$00, XRD0
-;		cmp	#KEY_CTRL_C
-;		bne	cont
 		asl	KBDCTC
 		bcc	cont
-;		lda	KBDCTC
-;		bpl	cont
-
-;		clc
-;		bcc	cont
 
 	end:
 		lda	#EOK
+
+	end_errA:
 		sta	errorlevel
 		lda	#$00
 		sta	errorlevel+1
@@ -359,9 +377,6 @@ XGETARGV = $2E
 		dex
 		bpl	save_fpos
 
-		;jsr	submit_reopen
-		;bcs	open_error
-
 		lda	#<line
 		ldy	#>line
 		ldx	#LINE_MAX_SIZE
@@ -370,13 +385,12 @@ XGETARGV = $2E
 ;		jsr	PrintRegs
 		bcs	end
 
-		;jsr	submit_close
 		chdir	path
 ;		print	line
 ;		crlf
 
 		; Si ECHO ON
-		;print	line
+		; print	line
 		; crlf
 
 		; Saute les ' ' en début de ligne
@@ -386,6 +400,10 @@ XGETARGV = $2E
 		lda	line,x
 		beq	loop
 		cmp	#' '
+		beq	skip
+
+		; Saute également les tabulations
+		cmp	#"\t"
 		beq	skip
 
 		; Premier caractère: '#' ou ';' -> commentaire
@@ -651,32 +669,6 @@ XGETARGV = $2E
 		;lda	#>path
 		;sta	file_pwd+1
 
-.if 0
-		; initmainargs semble poser un problème avec EXEC
-		; c'est à priori lié au malloc fait par inimainargs
-;		initmainargs _argv
-;		stx	_argc
-;		dex
-;		beq	end
-; [
-		; Sauvegarde la ligne de commande
-		lda	#<BUFEDT
-		ldy	#>BUFEDT
-;		lda	#$01
-;		initmainargs
-		sta	RES
-		sty	RES+1
-
-		ldy	#$00
-	init:
-		lda	(RES),y
-		sta	cmdline,y
-		beq	end
-		iny
-		bne	init
-
-;		mfree	(RES)
-.endif
 	end:
 		rts
 .endproc

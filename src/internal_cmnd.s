@@ -1,7 +1,7 @@
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
-.feature string_escapes
+.feature string_escapes, loose_char_term
 
 .include "telestrat.inc"
 .include "errno.inc"
@@ -24,15 +24,23 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From submit.s
 .import submit_line
+
+; From main.s
 .import errorlevel
+.import entry
 
-.import spar1
-	spar := spar1
-
+; From variables.s
 .importzp object
+.import var_getvalue
+.import var_search
 
+; From affectation.s
 .import affectation
+
+; From cmnd_label.s
+.import cmnd_label
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -191,12 +199,6 @@ CASE_SENSITIVE_LABELS .set 0
 		sta	ptr
 		sty	ptr+1
 
-;		; Sauvegarde le flag C
-;		php
-;		pla
-;		and	#$01
-;		ror
-;		sta	save_a
 ;		; Sauvegarde le flag C et force C=1
 		lda	#$01
 		ror
@@ -532,6 +534,10 @@ CASE_SENSITIVE_LABELS .set 0
 		lda	submit_line,x
 		beq	end
 		cmp	#' '
+		beq	loop
+
+		; Skip tab too
+		cmp	#"\t"
 		beq	loop
 
 		; Charge le caractère

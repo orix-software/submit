@@ -1,8 +1,8 @@
+.feature string_escapes
+
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
-.feature string_escapes
-
 .include "telestrat.inc"
 .include "errno.inc"
 
@@ -10,56 +10,28 @@
 ;			includes SDK
 ;----------------------------------------------------------------------
 .include "SDK.mac"
-.include "types.mac"
 
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-.include "macros/utils.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-; From fgets.s
-.import fgets
+; From main.s
+.import errorlevel
 
 ; From submit.s
 .import submit_line
-.import submit
 
 ; From internal_cmnd.s
-.import line
-.import find_cmnd
+.import save_x
 .import skip_spaces
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export cmnd_text
-
-;----------------------------------------------------------------------
-;			Defines / Constantes
-;----------------------------------------------------------------------
-; de main.s
-LINE_MAX_SIZE = 128
-
-;----------------------------------------------------------------------
-;				Variables
-;----------------------------------------------------------------------
-.pushseg
-	.segment "DATA"
-
-.popseg
-
-;----------------------------------------------------------------------
-;			Chaines statiques
-;----------------------------------------------------------------------
-.pushseg
-	.segment "RODATA"
-		endtext:
-			string80 "ENDTEXT"
-			.byte $00
-.popseg
+.export cmnd_exec
 
 ;----------------------------------------------------------------------
 ;			Programme principal
@@ -70,76 +42,83 @@ LINE_MAX_SIZE = 128
 ;
 ; Entrée:
 ;	X: offset sur le premier caractère suivant la commande
+;
 ; Sortie:
 ;
 ; Variables:
 ;	Modifiées:
-;		-
-;	Utilisées:
-;		line
-;		endtext
+;		exec_address
 ;		submit_line
+;	Utilisées:
+;		-
 ; Sous-routines:
 ;	skip_spaces
-;	submit_reopen
-;	submit_close
-;	fgets
-;	submit
-;	find_cmnd
-;	print
-;	crlf
 ;----------------------------------------------------------------------
-.proc cmnd_text
+.proc cmnd_exec
 		jsr	skip_spaces
+		stx	save_x
+
+		; Sauvegarde la banque active
+		; EXEC revient avec la banque 5 active
+		lda	VIA2::PRA
+		pha
+
+		clc
+		lda	#<submit_line
+		adc	save_x
+		ldy	#>submit_line
+		bcc	go
+		iny
+	go:
+		ldx	#$01
+		.byte	$00, XEXEC
+
+;		jsr	PrintRegs
+
+		; Le code de retour du kernel est dans:
+		; Kernel VERSION_2022_2 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_3 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_4 ($01) -> Y (code retour de  la commande dans A)
+		;cmp	#EOK
+		cpy	#EOK
 		bne	error
 
+		; Code erreur de la commande dans ERRORLEVEL
+		sta	errorlevel
+		lda	#$00
+		sta	errorlevel+1
+
+		; Restaure la banque
+		pla
+		sta	VIA2::PRA
+
 		;jsr	submit_reopen
-		;bcs	open_error
-
-	loop:
-		lda	#<line
-		ldy	#>line
-		ldx	#LINE_MAX_SIZE
-
-		jsr	fgets
-		bcs	end
-
-		; Pour prendre en compte les caractères de contrôle et les
-		; paramètres.
-		lda	#<line
-		ldy	#>line
-		ldx	#$00
-		jsr	submit
-		; Erreur?
-		bcs	error
-
-		lda	#<endtext
-		ldy	#>endtext
-		; Si ENDTEXT doit être uniquement en début de ligne
-		; [
-		; ldx	#$00
-		; ]
 		clc
-		jsr	find_cmnd
-		bcc	end
-
-		print	submit_line
-		crlf
-		jmp	loop
-
-	end:
-		;jsr	submit_close
 		rts
 
-
 	error:
-		; Erreur de syntaxe, TEXT doit être seul sur la ligne
-		lda	#$ff
+		; Restaure la banque
+		pla
+		sta	VIA2::PRA
+;		print	unknown_msg
+;		print	submit_line
+;		crlf
+
+		;jsr	submit_reopen
+
+		ldx	save_x
+		; Le code de retour du kernel est dans:
+		; Kernel VERSION_2022_2 ($00) -> Acc (pas de code retour de la commande)
+		; Kernel VERSION_2022_3 ($00)
+		; Kernel VERSION_2022_4 ($01) -> Y (code retour de  la commande dans A)
+		; lda	#ENOENT
+		tya
+
 		sec
 		rts
 
-	open_error:
-		rts
+;	unknown_msg:
+;		.asciiz "\r\nUnknown command: "
 
 .endproc
 

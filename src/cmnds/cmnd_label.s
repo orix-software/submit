@@ -15,18 +15,24 @@
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-;.include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From debug.s
+.import PrintHexByte
+
+; From internal_cmnd.s
 .importzp ptr
-
-.import save_a, save_y
-.import submit_line
-
+.import save_x
 .import skip_spaces, find_cmnd
+
+; From fgets.s
+.import fpos_text
+.import linenum
+
+; From submit.s
+.import submit_line
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -102,11 +108,12 @@ LABEL_TABLE_SIZE = 255
 		lda	#<labels
 		ldy	#>labels
 
-.if ::CASE_SENSITIVE_LABELS
+	.if ::CASE_SENSITIVE_LABELS
 		;Case sensitive
 		;sinon il faut convertir le label en majuscules dans la table
 		sec
-.endif
+	.endif
+
 		jsr	find_cmnd
 		bcc	found
 
@@ -134,7 +141,7 @@ LABEL_TABLE_SIZE = 255
 		cmp	#' '
 		beq	saved
 
-.if .not ::CASE_SENSITIVE_LABELS
+	.if .not ::CASE_SENSITIVE_LABELS
 		; Conversion minuscules / majuscules
 		cmp	#'a'
 		bcc	store
@@ -142,7 +149,8 @@ LABEL_TABLE_SIZE = 255
 		bcs	store
 		sbc	#'a'-'A'-1
 	store:
-.endif
+	.endif
+
 		sta	labels, y
 
 		inx
@@ -342,6 +350,5 @@ LABEL_TABLE_SIZE = 255
 
 		clc
 		rts
-
 .endproc
 

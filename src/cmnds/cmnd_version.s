@@ -1,4 +1,3 @@
-
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
@@ -28,7 +27,7 @@
 ;----------------------------------------------------------------------
 ;			Defines / Constantes
 ;----------------------------------------------------------------------
-VERSION = $20233013
+VERSION = $02530141
 .define PROGNAME "submit"
 
 ;----------------------------------------------------------------------
@@ -59,10 +58,10 @@ VERSION = $20233013
 ;	- prints
 ;----------------------------------------------------------------------
 .proc cmnd_version
-		.out .sprintf("%s version: %x.%x - %x.%x", PROGNAME, ::VERSION >> 16, (::VERSION & $f000)>>12 , (::VERSION & $ff0)>>4, (::VERSION & $0f))
+		.out .sprintf("%s version: %x.%x - %x.%x", PROGNAME, (::VERSION & $ff00)>>8, (::VERSION & $ff), $2000+(::VERSION >> 20), (::VERSION & $f0000)>>16)
 
 ;	        prints  "submit version 1.0 - 2022.2\r\n"
-		prints  .sprintf("%s version %x.%x - %x.%x\r\n", PROGNAME, (::VERSION & $ff0)>>4, (::VERSION & $0f), ::VERSION >> 16, (::VERSION & $f000)>>12)
+		prints  .sprintf("%s version %x.%x - %x.%x (dev)\r\n", PROGNAME, (::VERSION & $ff00)>>8, (::VERSION & $ff), $2000+(::VERSION >> 20), (::VERSION & $f0000)>>16)
 		rts
 .endproc
 

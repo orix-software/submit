@@ -22,32 +22,36 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-;.import PrintHexByte
+; From utils.s
+.import  xbindx
 
-;.import fgets
-;.import linenum
+; From internal_cmnd.s
+.import save_a
+.import save_y
+.import find_var
+
+; From main.s
+.import entry
+.import fp
 .import filename
-
-;.importzp cwd
-;.importzp file_pwd
 .import submit_path
+.import _argc
 
-; Pour la gestion des variables
-;.importzp var1, var2
-
-; Pour submit_reopen / submit_close dans fgets
-; Indique que cmnd_restore est en cours
+; From cmnd_restore.s
 .import f_restore
+
+; From fseek.s
+.import fseek
+
+; From ftell.s
+.import ftell
+
+; From args.s
+.import _get_argv
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-;.export fpos
-
-; Pour fopen, fclose
-.import fp
-
-;.export _argv, _argc
 .export submit_line
 
 .export submit
@@ -460,25 +464,6 @@ CTRL_PREFIX = '^'
 		sty	save_y
 		ldx	save_x
 
-.if 0
-		lda	#<internal_var_table
-		ldy	#>internal_var_table
-		clc
-		jsr	find_cmnd
-		bcs	not_found
-
-		; pseudo variable EXIST = 0
-		beq	not_found
-
-	found:
-		; Récupère la valeur de la variable
-		; On arrive ici avec C=0
-		sbc	#$00
-		asl
-		tax
-		lda	vartab,x
-		ldy	vartab+1,x
-.else
 		clc
 		jsr	find_var
 		bcs	not_found
@@ -507,7 +492,6 @@ CTRL_PREFIX = '^'
 		jmp	adjust_x
 
 	numeric:
-.endif
 		; Sauvegarde DEFAFF
 		ldx	DEFAFF
 		stx	save_a

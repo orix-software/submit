@@ -1,59 +1,59 @@
+.feature string_escapes
+
 ;----------------------------------------------------------------------
 ;			includes cc65
 ;----------------------------------------------------------------------
 .include "telestrat.inc"
+.include "errno.inc"
 
 ;----------------------------------------------------------------------
 ;			includes SDK
 ;----------------------------------------------------------------------
-.include "ch376.inc"
+.include "SDK.mac"
+.include "types.mac"
+
+;----------------------------------------------------------------------
+;			include application
+;----------------------------------------------------------------------
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
-; From main.s
-.import fpos
+; From scan.s
+.import flow_stack
 
 ;----------------------------------------------------------------------
 ;				exports
 ;----------------------------------------------------------------------
-.export ftell
+.export cmnd_endif
 
 ;----------------------------------------------------------------------
 ;
 ; Entrée:
+;	X: offset sur le premier caractère suivant la commande
 ;
 ; Sortie:
-;	A : Modifié
-;	X,Y: inchangés
 ;
 ; Variables:
 ;	Modifiées:
-;		fpos
+;		-
 ;	Utilisées:
 ;		-
 ; Sous-routines:
 ;	-
 ;----------------------------------------------------------------------
-.proc ftell
-		lda	#CH376_READ_VAR32
-		sta	CH376_COMMAND
+.proc cmnd_endif
+		; ENDIF marque la fin du bloc
+		lda	flow_stack
+		beq	err_empty
 
-		lda	#CH376_VAR_CURRENT_OFFSET
-		sta	CH376_DATA
+		dec	flow_stack
+		clc
+		rts
 
-		lda	CH376_DATA
-		sta	fpos
-
-		lda	CH376_DATA
-		sta	fpos+1
-
-		lda	CH376_DATA
-		sta	fpos+2
-
-		lda	CH376_DATA
-		sta	fpos+3
-
+	err_empty:
+		sec
+		lda	#ERANGE
 		rts
 .endproc
 

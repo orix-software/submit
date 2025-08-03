@@ -5,7 +5,6 @@
 
 .include "telestrat.inc"
 .include "errno.inc"
-;.include "fcntl.inc"
 
 ;----------------------------------------------------------------------
 ;			includes SDK
@@ -22,17 +21,20 @@
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From sopt.s
 .import spar1
 	spar := spar1
 
-
+; From internal_cmnd.s
 .importzp var1, var2
 .import save_a, save_x, save_y
+.import skip_spaces
 
+; From submit.s
 .import submit_line
-.import skip_space
 
-.import cmns_echo
+; From cmnd_echo.s
+.import cmnd_echo
 
 ;----------------------------------------------------------------------
 ;				exports
@@ -144,8 +146,6 @@
 
 	echo:
 		jmp	cmnd_echo
-;		clc
-;		rts
 
 	value_error:
 		; Recalcule l'offset par rapport à submit_line

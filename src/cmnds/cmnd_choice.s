@@ -13,19 +13,22 @@
 ;----------------------------------------------------------------------
 ;			include application
 ;----------------------------------------------------------------------
-;.include "macros/utils.mac"
-;.include "macros/SDK-ext.mac"
 
 ;----------------------------------------------------------------------
 ;				imports
 ;----------------------------------------------------------------------
+; From internal_cmnd.s
 .importzp ptr
-
-.import save_a, save_y
-.import submit_line
-.import error_level
-
+.import save_a, save_x, save_y
+.import string_delim
 .import skip_spaces
+
+; From submit.s
+.import submit_line
+
+; From main.s
+.import errorlevel
+
 
 ;----------------------------------------------------------------------
 ;				exports
